@@ -7,7 +7,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
-    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0;}
+    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0; min-height:100vh;}
     .top {background:#1a1a3a; padding:12px; display:flex; align-items:center; border-bottom:1px solid #333;}
     .avatar {width:50px; height:50px; border-radius:50%; border:2px solid #00aaff; margin-right:12px;}
     .name {font-size:1.3em; font-weight:bold;}
@@ -16,20 +16,20 @@
     .recharge {background:#00aaff; color:white; border:none; padding:14px; font-size:1.3em; border-radius:12px; width:90%; margin:10px auto; display:block;}
     .ref-card {background:linear-gradient(#00aaff, #0077cc); margin:15px; padding:15px; border-radius:12px; text-align:center; color:white;}
     .ref-btn {background:#ffffff20; color:white; padding:12px; border:none; border-radius:20px; font-size:1.2em; width:100%; margin-top:10px;}
-    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; position:fixed; bottom:0; left:0; right:0; border-top:1px solid #333;}
-    .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center;}
-    .tab-btn.active {color:#ffffff;}
-    .content {padding:15px; padding-bottom:80px;}
+    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; border-top:1px solid #333; position:sticky; bottom:0; z-index:10;}
+    .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center; cursor:pointer;}
+    .tab-btn.active {color:#ffffff; border-bottom:3px solid #ffd700;}
+    .content {padding:15px; padding-bottom:70px;}
     .bets {display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0;}
     .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
     .bet-btn.active {background:#ffd700; color:#000;}
     .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold;}
     .go-btn:disabled {background:#555; opacity:0.6;}
-    #reel-container {overflow:hidden; height:120px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
-    #reel {display:flex; position:absolute; left:0; transition:left 4.5s cubic-bezier(0.25, 0.1, 0.25, 1);}
-    .prize {width:120px; height:120px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:4em; background:#1a1a3a; border:1px solid #444;}
-    .center-line {position:absolute; top:0; bottom:0; left:50%; width:4px; background:#ffd700; transform:translateX(-50%); pointer-events:none; box-shadow:0 0 20px #ffd700;}
-    #result {font-size:2em; text-align:center; margin:20px 0; font-weight:bold;}
+    #reel-container {overflow:hidden; height:140px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
+    #reel {display:flex; position:absolute; left:0; transition:left 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
+    .prize {width:140px; height:140px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:5em; background:#1a1a3a; border:1px solid #444;}
+    .center-line {position:absolute; top:0; bottom:0; left:50%; width:6px; background:#ffd700; transform:translateX(-50%); pointer-events:none; box-shadow:0 0 30px #ffd700, 0 0 60px #ffaa00;}
+    #result {font-size:2em; text-align:center; margin:20px 0; font-weight:bold; min-height:60px;}
     .win {color:#00ffaa; animation:blink 1.2s infinite;}
     .lose {color:#ff6666;}
     @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
@@ -139,7 +139,7 @@
 
     function openCase() {
       if (isSpinning) {
-        alert("Подожди, пока закончится прокрутка!");
+        alert("Подожди окончания прокрутки!");
         return;
       }
 
@@ -160,20 +160,22 @@
       document.getElementById('stars').innerHTML = stars;
 
       const rand = Math.random() * 100;
-      let prize = 'Common Bear 🧸';
+      let prizeEmoji = '🧸';
+      let prizeName = 'Common Bear';
       let cls = 'lose';
       let multiplier = currentBet >= 100 ? 1.5 : 1;
 
-      if (rand < 0.44 * multiplier) { prize = 'Legendary Crystal 💎'; cls = 'win'; }
-      else if (rand < 1.77 * multiplier) { prize = 'Epic Trophy 🏆'; cls = 'win'; }
-      else if (rand < 3.1 * multiplier) { prize = 'Rare Rocket 🚀'; cls = 'win'; }
-      else if (rand < 37.97 * multiplier) { prize = 'Uncommon Rose 🌹'; cls = 'win'; }
-      else if (rand < 48 * multiplier) { prize = 'Ring 💍'; cls = 'win'; }
+      if (rand < 0.44 * multiplier) { prizeEmoji = '💎'; prizeName = 'Legendary Crystal'; cls = 'win'; }
+      else if (rand < 1.77 * multiplier) { prizeEmoji = '🏆'; prizeName = 'Epic Trophy'; cls = 'win'; }
+      else if (rand < 3.1 * multiplier) { prizeEmoji = '🚀'; prizeName = 'Rare Rocket'; cls = 'win'; }
+      else if (rand < 37.97 * multiplier) { prizeEmoji = '🌹'; prizeName = 'Uncommon Rose'; cls = 'win'; }
+      else if (rand < 48 * multiplier) { prizeEmoji = '💍'; prizeName = 'Ring'; cls = 'win'; }
 
       const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
       const reel = document.getElementById('reel');
       reel.innerHTML = '';
-      for (let i = 0; i < 35; i++) {
+      // Делаем длинную ленту: 50 случайных + выигранный в конце
+      for (let i = 0; i < 50; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
         div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
@@ -181,30 +183,34 @@
       }
       const finalDiv = document.createElement('div');
       finalDiv.className = 'prize';
-      finalDiv.innerHTML = prize.split(' ')[1] || prize;
+      finalDiv.innerHTML = prizeEmoji;
       reel.appendChild(finalDiv);
 
-      const offset = - (35 * 120 + 60);
-      reel.style.transition = 'left 4.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+      // Точный offset: чтобы последний приз был ровно в центре контейнера
+      const prizeWidth = 140; // ширина приза
+      const containerWidth = document.getElementById('reel-container').offsetWidth;
+      const centerOffset = (containerWidth - prizeWidth) / 2;
+      const offset = - ((50 * prizeWidth) - centerOffset);
+      reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
 
       document.getElementById('spin-sound').play();
 
       setTimeout(() => {
-        document.getElementById('result').innerHTML = `<span class="${cls}">${prize}</span>`;
+        document.getElementById('result').innerHTML = `<span class="${cls}">${prizeName}</span>`;
         if (cls === 'win') {
-          confetti({particleCount: 120, spread: 90});
+          confetti({particleCount: 150, spread: 100, origin: { y: 0.6 }});
           document.getElementById('win-sound').play();
         }
         stars += Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3));
         document.getElementById('stars').innerHTML = stars;
-        addHistory(`${prize} +${Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3))} ★`);
+        addHistory(`${prizeName} +${Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3))} ★`);
 
         isSpinning = false;
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
-      }, 4800);
+      }, 5200);
     }
 
     showTab('play');
