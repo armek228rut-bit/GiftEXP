@@ -173,9 +173,15 @@
 
       const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
       const reel = document.getElementById('reel');
-      reel.innerHTML = ''; // обязательно очищаем перед новой анимацией!
 
-      // Длинная лента: 80 случайных + выигранный + ещё 80 случайных (чтобы не было пустоты)
+      // Сброс позиции перед новой анимацией — это ключевой фикс!
+      reel.style.transition = 'none';
+      reel.style.left = '0px';
+      reel.offsetHeight; // force reflow
+
+      reel.innerHTML = '';
+
+      // Длинная лента: 80 случайных + выигранный + 80 случайных
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
@@ -193,12 +199,14 @@
         reel.appendChild(div);
       }
 
-      // Точный offset: выигранный приз (80-й) ровно в центре
+      // Точный offset: выигранный приз ровно в центре
       const prizeWidth = 160;
       const containerWidth = document.getElementById('reel-container').offsetWidth;
       const centerOffset = (containerWidth - prizeWidth) / 2;
-      const totalLeftWidth = 80 * prizeWidth; // до выигранного
+      const totalLeftWidth = 80 * prizeWidth;
       const offset = - (totalLeftWidth - centerOffset);
+
+      // Запускаем анимацию
       reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
 
