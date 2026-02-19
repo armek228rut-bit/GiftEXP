@@ -7,7 +7,7 @@
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
   <style>
-    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0; overflow:hidden;}
+    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0;}
     .top {background:#1a1a3a; padding:12px; display:flex; align-items:center; border-bottom:1px solid #333;}
     .avatar {width:50px; height:50px; border-radius:50%; border:2px solid #00aaff; margin-right:12px;}
     .name {font-size:1.3em; font-weight:bold;}
@@ -20,98 +20,181 @@
     .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center;}
     .tab-btn.active {color:#ffffff;}
     .content {padding:15px; padding-bottom:80px;}
+
     .bets {display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0;}
     .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
     .bet-btn.active {background:#ffd700; color:#000;}
     .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold;}
-    #result {font-size:1.8em; text-align:center; margin:30px 0; min-height:60px;}
+
+    /* Анимация прокрутки как в CS:GO */
+    #reel-container {overflow:hidden; height:120px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
+    #reel {display:flex; position:absolute; left:0; transition: left 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
+    .prize {width:120px; height:120px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:4em; background:#1a1a3a; border:1px solid #444;}
+    .center-line {position:absolute; top:0; bottom:0; left:50%; width:4px; background:#ffd700; transform:translateX(-50%); pointer-events:none; box-shadow:0 0 20px #ffd700;}
+    #result {font-size:2em; text-align:center; margin:20px 0; font-weight:bold;}
+
     .win {color:#00ffaa; animation:blink 1.2s infinite;}
     .lose {color:#ff6666;}
-
-    /* Колесо анимации */
-    #wheel-container {position:relative; width:300px; height:300px; margin:30px auto; perspective:1000px;}
-    #wheel {width:100%; height:100%; border-radius:50%; background:conic-gradient(
-      #ff3366 0deg 60deg,
-      #ffd700 60deg 120deg,
-      #00ff88 120deg 180deg,
-      #00aaff 180deg 240deg,
-      #ff3366 240deg 300deg,
-      #ffd700 300deg 360deg
-    ); transform-style:preserve-3d; transition:transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
-    .segment {position:absolute; width:100%; height:100%; clip-path:polygon(50% 50%, 100% 0, 100% 100%);}
-    .prize {position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); font-size:1.8em; pointer-events:none;}
-    #pointer {position:absolute; top:-20px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:20px solid transparent; border-right:20px solid transparent; border-bottom:40px solid #ffd700; z-index:10;}
+    @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
   </style>
 </head>
 <body>
-  <!-- ... (профиль, баланс, рефералка, вкладки - оставь как было) ... -->
+  <div class="top">
+    <img class="avatar" id="user-avatar" src="https://via.placeholder.com/50?text=Av" alt="Avatar">
+    <div>
+      <div class="name" id="user-name">Твой Ник 🍅</div>
+      <div class="level">Ур. <span id="level">2</span></div>
+    </div>
+  </div>
+
+  <div class="balance">Баланс: <span id="stars">92</span> ★</div>
+  <button class="recharge" onclick="alert('Пополнение через Telegram Stars')">Пополнить баланс</button>
+
+  <div class="ref-card">
+    Приглашай друзей и зарабатывай 10% от их депозитов!
+    <button class="ref-btn" onclick="alert('Ссылка: t.me/твойбот?start=ref_12345')">Пригласить друзей</button>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('play')">Играть</button>
+    <button class="tab-btn" onclick="showTab('gifts')">Подарки</button>
+    <button class="tab-btn" onclick="showTab('friends')">Друзья</button>
+    <button class="tab-btn" onclick="showTab('history')">История</button>
+  </div>
 
   <div id="play" class="content">
-    <div class="bets"> <!-- ставки как раньше --> </div>
-    <button class="go-btn" onclick="spinWheel()">Мне повезёт, Go! <span id="bet-display">100</span> ★</button>
+    <div class="bets">
+      <button class="bet-btn" data-bet="25">25 ★</button>
+      <button class="bet-btn" data-bet="50">50 ★</button>
+      <button class="bet-btn active" data-bet="100">100 ★</button>
+      <button class="bet-btn" data-bet="250">250 ★</button>
+    </div>
+    <button class="go-btn" onclick="openCase()">Мне повезёт, Go! <span id="bet-display">100</span> ★</button>
 
-    <div id="wheel-container">
-      <div id="pointer"></div>
-      <div id="wheel"></div>
+    <div id="reel-container">
+      <div id="reel"></div>
+      <div class="center-line"></div>
     </div>
 
     <div id="result"></div>
   </div>
 
-  <!-- аудио для эффектов -->
-  <audio id="spin-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-game-jump-coin-216.mp3"></audio>
-  <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-magical-coin-win-1939.mp3"></audio>
+  <div id="gifts" class="content" style="display:none;">
+    <h3>Твои подарки</h3>
+    <p>Здесь будут выигранные подарки</p>
+  </div>
+
+  <div id="friends" class="content" style="display:none;">
+    <h3>Друзья</h3>
+    <p>Приглашено: 0 | Заработано: 0 ★</p>
+  </div>
+
+  <div id="history" class="content" style="display:none;">
+    <h3>История</h3>
+    <ul id="history-list" class="history-list"></ul>
+  </div>
+
+  <audio id="spin-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
+  <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.wav"></audio>
 
   <script>
-    // ... (остальной код: баланс, ставки, showTab и т.д. оставь как было) ...
+    Telegram.WebApp.ready();
+    Telegram.WebApp.expand();
 
-    function spinWheel() {
+    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 92;
+    let currentBet = 100;
+    let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
+
+    const user = Telegram.WebApp.initDataUnsafe.user;
+    if (user) {
+      document.getElementById('user-name').innerHTML = (user.username || user.first_name) + ' 🍅';
+      if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
+    }
+
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentBet = parseInt(btn.dataset.bet);
+        document.getElementById('bet-display').innerHTML = currentBet;
+      };
+    });
+
+    function showTab(tab) {
+      document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+      document.getElementById(tab).style.display = 'block';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function addHistory(entry) {
+      history.push(entry);
+      localStorage.setItem('gift_exp_history', JSON.stringify(history));
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+      history.slice(-5).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
+    }
+
+    function openCase() {
       if (stars < currentBet) return alert("Недостаточно Stars!");
 
       stars -= currentBet;
+      addHistory(`Открытие кейса -${currentBet} ★`);
       document.getElementById('result').innerHTML = '';
-      const wheel = document.getElementById('wheel');
-      const spinSound = document.getElementById('spin-sound');
-      spinSound.play();
+      document.getElementById('stars').innerHTML = stars;
 
-      // Случайный угол остановки (360*5 + random 0-360)
-      const extraSpins = 5 + Math.floor(Math.random() * 3);
-      const randomAngle = Math.random() * 360;
-      const finalAngle = 360 * extraSpins + randomAngle;
+      // Определяем выигрыш заранее
+      const rand = Math.random() * 100;
+      let prize = 'Common Bear 🧸';
+      let cls = 'lose';
+      let multiplier = currentBet >= 100 ? 1.5 : 1; // улучшение шансов на высоких ставках
 
-      wheel.style.transition = 'transform 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
-      wheel.style.transform = `rotate(${finalAngle}deg)`;
+      if (rand < 0.44 * multiplier) { prize = 'Legendary Crystal 💎'; cls = 'win'; }
+      else if (rand < 1.77 * multiplier) { prize = 'Epic Trophy 🏆'; cls = 'win'; }
+      else if (rand < 3.1 * multiplier) { prize = 'Rare Rocket 🚀'; cls = 'win'; }
+      else if (rand < 37.97 * multiplier) { prize = 'Uncommon Rose 🌹'; cls = 'win'; }
+      else if (rand < 48 * multiplier) { prize = 'Ring 💍'; cls = 'win'; }
+
+      // Создаём ленту из 40 случайных призов, последний - выигранный
+      const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
+      const reel = document.getElementById('reel');
+      reel.innerHTML = '';
+      for (let i = 0; i < 35; i++) {
+        const div = document.createElement('div');
+        div.className = 'prize';
+        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        reel.appendChild(div);
+      }
+      // Последний - выигранный
+      const finalDiv = document.createElement('div');
+      finalDiv.className = 'prize';
+      finalDiv.innerHTML = prize.split(' ')[1] || prize; // эмодзи
+      reel.appendChild(finalDiv);
+
+      // Прокрутка: сдвигаем влево на (35 * 120px + центр)
+      const offset = - (35 * 120 + 60); // до центра последнего
+      reel.style.transition = 'left 4.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+      reel.style.left = offset + 'px';
+
+      document.getElementById('spin-sound').play();
 
       setTimeout(() => {
-        // Определяем выигрыш по углу (примерно)
-        const normalized = finalAngle % 360;
-        let msg = 'Common Bear 🧸';
-        let cls = 'lose';
-        let winAmount = currentBet * 1.2; // минимум +
-
-        if (normalized < 60) { msg = 'Rare Rocket 🚀'; cls = 'win'; winAmount = currentBet * 3; confetti(); }
-        else if (normalized < 120) { msg = 'Epic Trophy 🏆'; cls = 'win'; winAmount = currentBet * 2.5; confetti(); }
-        else if (normalized < 180) { msg = 'Rose 🌹'; cls = 'win'; winAmount = currentBet * 1.8; }
-        else if (normalized < 240) { msg = 'Crystal 💎'; cls = 'win'; winAmount = currentBet * 4; confetti(); }
-        else if (normalized < 300) { msg = 'Ring 💍'; cls = 'win'; winAmount = currentBet * 2; }
-        else { msg = 'Teddy 🧸'; winAmount = currentBet * 1.5; }
-
-        stars += Math.floor(winAmount);
-        document.getElementById('result').innerHTML = `<span class="${cls}">${msg} +${Math.floor(winAmount)} ★</span>`;
-        document.getElementById('spin-sound').pause();
-        if (cls === 'win') document.getElementById('win-sound').play();
-
-        updateBalance();
-      }, 5200); // после анимации
+        document.getElementById('result').innerHTML = `<span class="${cls}">${prize}</span>`;
+        if (cls === 'win') {
+          confetti({particleCount: 120, spread: 90});
+          document.getElementById('win-sound').play();
+        }
+        stars += Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3)); // +80% или +30% в среднем
+        document.getElementById('stars').innerHTML = stars;
+        addHistory(`${prize} +${Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3))} ★`);
+      }, 4800);
     }
 
-    function confetti() {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
-    }
+    showTab('play');
   </script>
 </body>
 </html>
