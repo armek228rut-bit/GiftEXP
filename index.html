@@ -16,10 +16,10 @@
     .recharge {background:#00aaff; color:white; border:none; padding:14px; font-size:1.3em; border-radius:12px; width:90%; margin:10px auto; display:block;}
     .ref-card {background:linear-gradient(#00aaff, #0077cc); margin:15px; padding:15px; border-radius:12px; text-align:center; color:white;}
     .ref-btn {background:#ffffff20; color:white; padding:12px; border:none; border-radius:20px; font-size:1.2em; width:100%; margin-top:10px;}
-    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; position:fixed; bottom:0; left:0; right:0; border-top:1px solid #333; z-index:100;}
+    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; position:fixed; bottom:0; left:0; right:0; border-top:1px solid #333; z-index:1000;}
     .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center; cursor:pointer;}
     .tab-btn.active {color:#ffffff; border-bottom:3px solid #ffd700;}
-    .content {padding:15px; padding-bottom:80px;}
+    .content {padding:15px; padding-bottom:90px;}
     .bets {display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0;}
     .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
     .bet-btn.active {background:#ffd700; color:#000;}
@@ -173,9 +173,9 @@
 
       const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
       const reel = document.getElementById('reel');
-      reel.innerHTML = ''; // очищаем перед новой анимацией
+      reel.innerHTML = ''; // обязательно очищаем перед новой анимацией!
 
-      // Длинная лента: 80 случайных + выигранный
+      // Длинная лента: 80 случайных + выигранный + ещё 80 случайных (чтобы не было пустоты)
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
@@ -186,15 +186,19 @@
       finalDiv.className = 'prize';
       finalDiv.innerHTML = prizeEmoji;
       reel.appendChild(finalDiv);
+      for (let i = 0; i < 80; i++) {
+        const div = document.createElement('div');
+        div.className = 'prize';
+        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        reel.appendChild(div);
+      }
 
-      // Точный расчёт: центр контейнера на выигранном призе
+      // Точный offset: выигранный приз (80-й) ровно в центре
       const prizeWidth = 160;
-      const container = document.getElementById('reel-container');
-      const containerWidth = container.offsetWidth;
+      const containerWidth = document.getElementById('reel-container').offsetWidth;
       const centerOffset = (containerWidth - prizeWidth) / 2;
-      const totalWidth = 81 * prizeWidth; // 80 + 1
-      const offset = - (totalWidth - centerOffset - prizeWidth / 2); // минус половина приза, чтобы центр ровно под линией
-
+      const totalLeftWidth = 80 * prizeWidth; // до выигранного
+      const offset = - (totalLeftWidth - centerOffset);
       reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
 
