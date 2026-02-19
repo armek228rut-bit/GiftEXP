@@ -3,186 +3,160 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gift EXP</title>
+  <title>Gift EXP - как Gift Go</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {background:#0a0a1f; color:#e0e0ff; text-align:center; font-family:sans-serif; padding:15px; margin:0;}
-    h1 {color:#ffd700; margin:10px 0; font-size:2.2em; text-shadow:0 0 10px #ffaa00;}
-    .stats {font-size:1.3em; margin:15px 0; background:#1a1a3a; padding:10px; border-radius:12px;}
-    button {background:#ff3366; color:white; border:none; padding:14px 28px; font-size:1.2em; border-radius:12px; margin:10px 8px; cursor:pointer; box-shadow:0 4px 10px rgba(255,51,102,0.4);}
-    button:disabled {background:#555; opacity:0.6;}
-    #result {font-size:1.6em; margin:25px 0; min-height:80px; font-weight:bold;}
-    .win {color:#00ffaa; animation:blink 1.2s infinite;}
+    body {background:#0a0a1f; color:#e0e0ff; font-family:sans-serif; padding:0; margin:0;}
+    .top-profile {background:#1a1a3a; padding:15px; display:flex; align-items:center; border-bottom:2px solid #ffd700;}
+    .avatar {width:60px; height:60px; border-radius:50%; border:3px solid #00ffaa; margin-right:15px;}
+    .name {font-size:1.4em; font-weight:bold;}
+    .level {color:#ffd700; font-size:1.1em;}
+    .balance {font-size:1.3em; margin:10px 0;}
+    .recharge-btn {background:#00aaff; color:white; border:none; padding:12px; font-size:1.2em; border-radius:12px; width:100%; margin:10px 0;}
+    .tabs {display:flex; justify-content:space-around; background:#111; padding:10px 0;}
+    .tab-btn {background:none; border:none; color:#aaa; font-size:1.1em; padding:10px; cursor:pointer;}
+    .tab-btn.active {color:#ffd700; border-bottom:3px solid #ffd700;}
+    .content {padding:15px;}
+    .bets {display:flex; flex-wrap:wrap; justify-content:center; margin:15px 0;}
+    .bet-btn {background:#ff3366; color:white; border:none; padding:12px 20px; font-size:1.2em; border-radius:12px; margin:8px; cursor:pointer;}
+    .bet-btn.active {background:#ffd700; color:#000;}
+    .go-btn {background:#00ff88; color:#000; padding:15px; font-size:1.5em; border:none; border-radius:12px; width:100%; margin:20px 0; font-weight:bold;}
+    #result {font-size:1.8em; margin:20px 0; text-align:center; font-weight:bold;}
+    .win {color:#00ffaa; animation:blink 1s infinite;}
     .lose {color:#ff6666;}
-    #exp-bar {margin:20px auto; background:#222; border:2px solid #ffd700; border-radius:12px; height:24px; width:90%; max-width:400px; overflow:hidden;}
-    #exp-progress {background:linear-gradient(to right, #ffd700, #ff8800); height:100%; width:0%; transition:width 0.6s;}
-    #inventory {margin:20px; background:#1a1a3a; padding:15px; border-radius:12px; display:none;}
-    #ref-link {margin:20px; padding:12px; background:#2a2a4a; border-radius:10px; word-break:break-all;}
-    @keyframes blink {0%,100% {opacity:1;} 50% {opacity:0.7;}}
+    .history-list {list-style:none; padding:0;}
+    .history-item {background:#1a1a3a; padding:10px; margin:8px 0; border-radius:8px;}
+    @keyframes blink {0%,100% {opacity:1;} 50% {opacity:0.6;}}
   </style>
 </head>
 <body>
-  <h1>Gift EXP</h1>
-  
-  <div class="stats">
-    Баланс Stars: <span id="stars">0</span> ★<br>
-    EXP: <span id="exp">0</span> | Уровень: <span id="level">1</span>
-  </div>
-  
-  <div id="exp-bar"><div id="exp-progress"></div></div>
-  
-  <p>Выбери кейс и крути!</p>
-  
-  <button id="btn-stars" onclick="openCase('stars')">Stars Case ★ (5 ★)</button><br>
-  <button id="btn-gifts" onclick="openCase('gifts')">Gifts Case 🎁 (10 ★)</button><br>
-  <button id="btn-nfts" onclick="openCase('nfts')">NFTs Case 🖼️ (15 ★)</button>
-
-  <button onclick="claimDailyBonus()" id="daily-btn">Забрать ежедневный бонус</button>
-
-  <div id="ref-link">
-    Пригласи друга и получи +10 ★ за каждого!<br>
-    <strong id="refurl"></strong>
+  <div class="top-profile">
+    <img class="avatar" src="https://via.placeholder.com/60?text=Av" alt="Avatar">
+    <div>
+      <div class="name">Твой Ник <span style="color:#ff3366;">🍅</span></div>
+      <div class="level">Ур. <span id="level">1</span></div>
+    </div>
   </div>
 
-  <button onclick="toggleInventory()">Инвентарь</button>
-  <div id="inventory">
-    <h3>Твой инвентарь:</h3>
-    <ul id="inv-list"></ul>
+  <div class="balance">Баланс: <span id="stars">50</span> ★</div>
+  <button class="recharge-btn">Пополнить баланс</button>
+
+  <div style="background:#1a1a3a; margin:15px; padding:15px; border-radius:12px;">
+    Приглашай друзей и зарабатывай 10% от их депозитов!
+    <button style="background:#00aaff; color:white; padding:12px; border:none; border-radius:12px; width:100%; margin-top:10px;">Пригласить друзей</button>
   </div>
 
-  <div id="result"></div>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('play')">Играть</button>
+    <button class="tab-btn" onclick="showTab('gifts')">Подарки</button>
+    <button class="tab-btn" onclick="showTab('friends')">Друзья</button>
+    <button class="tab-btn" onclick="showTab('history')">История</button>
+  </div>
+
+  <div id="play" class="content">
+    <div class="bets">
+      <button class="bet-btn" data-bet="25">25 ★</button>
+      <button class="bet-btn" data-bet="50">50 ★</button>
+      <button class="bet-btn active" data-bet="100">100 ★</button>
+      <button class="bet-btn" data-bet="250">250 ★</button>
+    </div>
+    <button class="go-btn" onclick="openCase()">Мне повезёт, Go! <span id="current-bet">100</span> ★</button>
+    <div id="result"></div>
+  </div>
+
+  <div id="gifts" class="content" style="display:none;">
+    <h3>Твои подарки</h3>
+    <p>Здесь будут твои выигранные подарки (пока пусто)</p>
+  </div>
+
+  <div id="friends" class="content" style="display:none;">
+    <h3>Приглашено: 0 | Заработано: 0 ★</h3>
+    <p>Приглашай друзей по ссылке выше!</p>
+  </div>
+
+  <div id="history" class="content" style="display:none;">
+    <h3>История</h3>
+    <ul id="history-list" class="history-list"></ul>
+  </div>
 
   <script>
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
 
-    // Данные
-    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 50; // старт 50 для теста
+    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 50;
     let exp = parseInt(localStorage.getItem('gift_exp_exp')) || 0;
     let level = Math.floor(exp / 100) + 1;
-    let inventory = JSON.parse(localStorage.getItem('gift_exp_inventory')) || [];
-    let lastDaily = localStorage.getItem('gift_exp_last_daily') || 0;
+    let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
 
-    // UI обновление
+    let currentBet = 100;
+
+    document.querySelectorAll('.bet-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentBet = parseInt(btn.dataset.bet);
+        document.getElementById('current-bet').innerHTML = currentBet;
+      };
+    });
+
     function updateUI() {
       document.getElementById('stars').innerHTML = stars;
-      document.getElementById('exp').innerHTML = exp;
       document.getElementById('level').innerHTML = level;
-      let progress = (exp % 100);
-      document.getElementById('exp-progress').style.width = progress + '%';
+      localStorage.setItem('gift_exp_stars', stars);
+      localStorage.setItem('gift_exp_exp', exp);
+      localStorage.setItem('gift_exp_history', JSON.stringify(history.slice(-10))); // последние 10
+    }
 
-      // Реф ссылка
-      const user = Telegram.WebApp.initDataUnsafe.user;
-      const refId = user ? user.id : 'testuser';
-      document.getElementById('refurl').innerHTML = `t.me/${Telegram.WebApp.initDataUnsafe.bot?.username || 'твойбот'}?start=ref_${refId}`;
-
-      // Инвентарь
-      const list = document.getElementById('inv-list');
+    function addHistory(action) {
+      history.push(action);
+      const list = document.getElementById('history-list');
       list.innerHTML = '';
-      inventory.forEach(item => {
+      history.slice(-5).forEach(item => {
         const li = document.createElement('li');
+        li.className = 'history-item';
         li.textContent = item;
         list.appendChild(li);
       });
-
-      // Кнопки disabled если мало Stars
-      document.getElementById('btn-stars').disabled = stars < 5;
-      document.getElementById('btn-gifts').disabled = stars < 10;
-      document.getElementById('btn-nfts').disabled = stars < 15;
-
-      // Daily кнопка
-      const now = Date.now();
-      const canClaim = now - lastDaily > 24*60*60*1000;
-      document.getElementById('daily-btn').disabled = !canClaim;
-      document.getElementById('daily-btn').textContent = canClaim ? "Забрать ежедневный бонус" : "Ежедневка уже взята";
-
-      localStorage.setItem('gift_exp_stars', stars);
-      localStorage.setItem('gift_exp_exp', exp);
-      localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
     }
 
-    updateUI();
-
-    function addExp(amount) {
-      exp += amount;
-      if (Math.floor(exp / 100) + 1 > level) {
-        level = Math.floor(exp / 100) + 1;
-        stars += 10 + level * 3; // бонус за уровень
-        alert(`Новый уровень ${level}! +${10 + level * 3} Stars бонус!`);
-      }
-      updateUI();
+    function showTab(tab) {
+      document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+      document.getElementById(tab).style.display = 'block';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
     }
 
-    function addStars(amount) {
-      stars += amount;
-      updateUI();
-    }
-
-    function addToInventory(item) {
-      inventory.push(item);
-      updateUI();
-    }
-
-    function openCase(type) {
-      let cost = type === 'stars' ? 5 : type === 'gifts' ? 10 : 15;
-      if (stars < cost) {
-        alert("Недостаточно Stars! Крути чаще или приглашай друзей.");
+    function openCase() {
+      if (stars < currentBet) {
+        alert("Недостаточно Stars!");
         return;
       }
 
-      stars -= cost;
-      document.getElementById('result').innerHTML = 'Крутится кейс... 🔥🎰🔥';
+      stars -= currentBet;
+      addHistory(`Открытие кейса -${currentBet} ★`);
+      document.getElementById('result').innerHTML = 'Крутится... 🎰🔥';
       updateUI();
 
       setTimeout(() => {
-        const chance = Math.random() * 100;
+        const rand = Math.random() * 100;
         let msg = '';
         let cls = 'lose';
-        let wonStars = 0;
-        let item = '';
 
-        if (type === 'stars') {
-          if (chance < 5) { wonStars = 50; msg = `Джекпот! +${wonStars} Stars!`; cls = 'win'; }
-          else if (chance < 25) { wonStars = 15; msg = `+${wonStars} Stars!`; cls = 'win'; }
-          else if (chance < 60) { wonStars = 5; msg = `+${wonStars} Stars.`; cls = 'win'; }
-          else { msg = '+1 Star... старайся дальше'; wonStars = 1; cls = 'lose'; }
-        } else if (type === 'gifts') {
-          if (chance < 3) { item = 'Rare Gift NFT 🎁👑'; msg = item; cls = 'win'; addStars(25); }
-          else if (chance < 20) { item = 'Common Gift 🎁'; msg = item; cls = 'win'; addStars(8); }
-          else { msg = 'Пусто... Нет подарка'; cls = 'lose'; }
-        } else if (type === 'nfts') {
-          if (chance < 2) { item = 'Legendary TON NFT 🖼️🔥'; msg = item; cls = 'win'; addStars(40); }
-          else if (chance < 15) { item = 'Rare NFT 🖼️'; msg = item; cls = 'win'; addStars(12); }
-          else { msg = 'Обычный NFT shard...'; cls = 'lose'; }
-        }
-
-        if (item) addToInventory(item);
+        // Пример шансов как в скрине
+        if (rand < 0.44) { msg = 'Legendary Crystal! 🔥'; cls = 'win'; stars += 1000; }
+        else if (rand < 1.77) { msg = 'Epic Trophy! 🏆'; cls = 'win'; stars += 500; }
+        else if (rand < 3.1) { msg = 'Rare Diamond! 💎'; cls = 'win'; stars += 200; }
+        else if (rand < 13.13) { msg = 'Uncommon Rose! 🌹'; cls = 'win'; stars += 50; }
+        else { msg = 'Common Bear... 🧸'; cls = 'lose'; stars += 5; }
 
         document.getElementById('result').innerHTML = `<span class="${cls}">${msg}</span>`;
-        if (wonStars > 0) addStars(wonStars);
-        addExp(10 + Math.floor(wonStars / 3));
+        addHistory(`${msg} +${stars - (stars - currentBet)} ★`); // упрощённо
+        updateUI();
       }, 2500);
     }
 
-    function claimDailyBonus() {
-      const now = Date.now();
-      if (now - lastDaily < 24*60*60*1000) {
-        alert("Ежедневный бонус уже взят. Приходи завтра!");
-        return;
-      }
-
-      addStars(20);
-      addExp(30);
-      lastDaily = now;
-      localStorage.setItem('gift_exp_last_daily', lastDaily);
-      alert("Ежедневный бонус: +20 Stars и +30 EXP! 🔥");
-      updateUI();
-    }
-
-    function toggleInventory() {
-      const inv = document.getElementById('inventory');
-      inv.style.display = inv.style.display === 'none' ? 'block' : 'none';
-    }
+    updateUI();
+    showTab('play'); // старт на игре
   </script>
 </body>
 </html>
