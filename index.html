@@ -109,12 +109,15 @@
       if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
     }
 
+    // Обновление текста кнопки Go! при смене ставки — это фикс твоей проблемы
     document.querySelectorAll('.bet-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentBet = parseInt(btn.dataset.bet);
         document.getElementById('bet-display').innerHTML = currentBet;
+        // Главное обновление текста кнопки
+        document.querySelector('.go-btn').textContent = `Мне повезёт, Go! ${currentBet} ★`;
       };
     });
 
@@ -174,14 +177,12 @@
       const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
       const reel = document.getElementById('reel');
 
-      // Сброс позиции перед новой анимацией — это ключевой фикс!
       reel.style.transition = 'none';
       reel.style.left = '0px';
-      reel.offsetHeight; // force reflow
+      reel.offsetHeight;
 
       reel.innerHTML = '';
 
-      // Длинная лента: 80 случайных + выигранный + 80 случайных
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
@@ -199,14 +200,12 @@
         reel.appendChild(div);
       }
 
-      // Точный offset: выигранный приз ровно в центре
       const prizeWidth = 160;
       const containerWidth = document.getElementById('reel-container').offsetWidth;
       const centerOffset = (containerWidth - prizeWidth) / 2;
       const totalLeftWidth = 80 * prizeWidth;
       const offset = - (totalLeftWidth - centerOffset);
 
-      // Запускаем анимацию
       reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
 
