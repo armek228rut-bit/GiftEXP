@@ -6,15 +6,18 @@
   <title>Gift EXP</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {background:#111; color:white; text-align:center; font-family:sans-serif; padding:20px; margin:0;}
-    h1 {color:#ffd700; margin:10px;}
-    .stats {font-size:18px; margin:15px 0;}
-    button {background:#e91e63; color:white; border:none; padding:15px 30px; font-size:20px; border-radius:12px; margin:10px; cursor:pointer;}
-    #result {font-size:26px; margin:30px 0; min-height:100px;}
-    .win {color:#00ff9d; animation:blink 1.5s infinite;}
-    .lose {color:#ff5252;}
-    #exp-bar {margin:20px auto; background:#333; border:2px solid #ffd700; border-radius:10px; height:25px; width:80%; max-width:400px;}
-    #exp-progress {background:linear-gradient(to right, #ffd700, #ffaa00); height:100%; width:0%; border-radius:8px; transition:width 0.5s;}
+    body {background:#0a0a1f; color:#e0e0ff; text-align:center; font-family:sans-serif; padding:15px; margin:0;}
+    h1 {color:#ffd700; margin:10px 0; font-size:2.2em; text-shadow:0 0 10px #ffaa00;}
+    .stats {font-size:1.3em; margin:15px 0; background:#1a1a3a; padding:10px; border-radius:12px;}
+    button {background:#ff3366; color:white; border:none; padding:14px 28px; font-size:1.2em; border-radius:12px; margin:10px 8px; cursor:pointer; box-shadow:0 4px 10px rgba(255,51,102,0.4);}
+    button:disabled {background:#555; opacity:0.6;}
+    #result {font-size:1.6em; margin:25px 0; min-height:80px; font-weight:bold;}
+    .win {color:#00ffaa; animation:blink 1.2s infinite;}
+    .lose {color:#ff6666;}
+    #exp-bar {margin:20px auto; background:#222; border:2px solid #ffd700; border-radius:12px; height:24px; width:90%; max-width:400px; overflow:hidden;}
+    #exp-progress {background:linear-gradient(to right, #ffd700, #ff8800); height:100%; width:0%; transition:width 0.6s;}
+    #inventory {margin:20px; background:#1a1a3a; padding:15px; border-radius:12px; display:none;}
+    #ref-link {margin:20px; padding:12px; background:#2a2a4a; border-radius:10px; word-break:break-all;}
     @keyframes blink {0%,100% {opacity:1;} 50% {opacity:0.7;}}
   </style>
 </head>
@@ -22,7 +25,7 @@
   <h1>Gift EXP</h1>
   
   <div class="stats">
-    Баланс Stars: <span id="stars">0</span> ⭐<br>
+    Баланс Stars: <span id="stars">0</span> ★<br>
     EXP: <span id="exp">0</span> | Уровень: <span id="level">1</span>
   </div>
   
@@ -30,9 +33,22 @@
   
   <p>Выбери кейс и крути!</p>
   
-  <button onclick="selectCase('stars')">Stars Case 🎖️ (шанс на много ⭐)</button><br>
-  <button onclick="selectCase('gifts')">Gifts Case 🎁 (редкие подарки)</button><br>
-  <button onclick="selectCase('nfts')">NFTs Case 🖼️ (TON NFT шансы)</button>
+  <button id="btn-stars" onclick="openCase('stars')">Stars Case ★ (5 ★)</button><br>
+  <button id="btn-gifts" onclick="openCase('gifts')">Gifts Case 🎁 (10 ★)</button><br>
+  <button id="btn-nfts" onclick="openCase('nfts')">NFTs Case 🖼️ (15 ★)</button>
+
+  <button onclick="claimDailyBonus()" id="daily-btn">Забрать ежедневный бонус</button>
+
+  <div id="ref-link">
+    Пригласи друга и получи +10 ★ за каждого!<br>
+    <strong id="refurl"></strong>
+  </div>
+
+  <button onclick="toggleInventory()">Инвентарь</button>
+  <div id="inventory">
+    <h3>Твой инвентарь:</h3>
+    <ul id="inv-list"></ul>
+  </div>
 
   <div id="result"></div>
 
@@ -40,82 +56,132 @@
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
 
-    // Загрузка сохранённых данных
-    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 0;
+    // Данные
+    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 50; // старт 50 для теста
     let exp = parseInt(localStorage.getItem('gift_exp_exp')) || 0;
     let level = Math.floor(exp / 100) + 1;
+    let inventory = JSON.parse(localStorage.getItem('gift_exp_inventory')) || [];
+    let lastDaily = localStorage.getItem('gift_exp_last_daily') || 0;
 
-    // Обновление UI
-    document.getElementById('stars').innerHTML = stars;
-    document.getElementById('exp').innerHTML = exp;
-    document.getElementById('level').innerHTML = level;
-    updateProgress();
-
-    function updateProgress() {
+    // UI обновление
+    function updateUI() {
+      document.getElementById('stars').innerHTML = stars;
+      document.getElementById('exp').innerHTML = exp;
+      document.getElementById('level').innerHTML = level;
       let progress = (exp % 100);
       document.getElementById('exp-progress').style.width = progress + '%';
+
+      // Реф ссылка
+      const user = Telegram.WebApp.initDataUnsafe.user;
+      const refId = user ? user.id : 'testuser';
+      document.getElementById('refurl').innerHTML = `t.me/${Telegram.WebApp.initDataUnsafe.bot?.username || 'твойбот'}?start=ref_${refId}`;
+
+      // Инвентарь
+      const list = document.getElementById('inv-list');
+      list.innerHTML = '';
+      inventory.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
+
+      // Кнопки disabled если мало Stars
+      document.getElementById('btn-stars').disabled = stars < 5;
+      document.getElementById('btn-gifts').disabled = stars < 10;
+      document.getElementById('btn-nfts').disabled = stars < 15;
+
+      // Daily кнопка
+      const now = Date.now();
+      const canClaim = now - lastDaily > 24*60*60*1000;
+      document.getElementById('daily-btn').disabled = !canClaim;
+      document.getElementById('daily-btn').textContent = canClaim ? "Забрать ежедневный бонус" : "Ежедневка уже взята";
+
+      localStorage.setItem('gift_exp_stars', stars);
+      localStorage.setItem('gift_exp_exp', exp);
+      localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
     }
+
+    updateUI();
 
     function addExp(amount) {
       exp += amount;
-      localStorage.setItem('gift_exp_exp', exp);
-      document.getElementById('exp').innerHTML = exp;
-      
-      let newLevel = Math.floor(exp / 100) + 1;
-      if (newLevel > level) {
-        level = newLevel;
-        document.getElementById('level').innerHTML = level;
-        // Бонус за уровень (можно расширять)
-        let bonusStars = 5 + level * 2; // +5 + по 2 за каждый уровень
-        stars += bonusStars;
-        localStorage.setItem('gift_exp_stars', stars);
-        document.getElementById('stars').innerHTML = stars;
-        alert(`Новый уровень ${level}! Бонус: +${bonusStars} Stars! 🎉`);
+      if (Math.floor(exp / 100) + 1 > level) {
+        level = Math.floor(exp / 100) + 1;
+        stars += 10 + level * 3; // бонус за уровень
+        alert(`Новый уровень ${level}! +${10 + level * 3} Stars бонус!`);
       }
-      updateProgress();
+      updateUI();
     }
 
     function addStars(amount) {
       stars += amount;
-      localStorage.setItem('gift_exp_stars', stars);
-      document.getElementById('stars').innerHTML = stars;
+      updateUI();
     }
 
-    function openCase(caseType) {
+    function addToInventory(item) {
+      inventory.push(item);
+      updateUI();
+    }
+
+    function openCase(type) {
+      let cost = type === 'stars' ? 5 : type === 'gifts' ? 10 : 15;
+      if (stars < cost) {
+        alert("Недостаточно Stars! Крути чаще или приглашай друзей.");
+        return;
+      }
+
+      stars -= cost;
       document.getElementById('result').innerHTML = 'Крутится кейс... 🔥🎰🔥';
-      
+      updateUI();
+
       setTimeout(() => {
         const chance = Math.random() * 100;
         let msg = '';
         let cls = 'lose';
         let wonStars = 0;
+        let item = '';
 
-        if (caseType === 'stars') {
-          if (chance < 5) { wonStars = 50; msg = `Джекпот! +${wonStars} Stars! 🌟🌟🌟`; cls = 'win'; }
-          else if (chance < 20) { wonStars = 10; msg = `Круто! +${wonStars} Stars! ⭐⭐`; cls = 'win'; }
-          else if (chance < 50) { wonStars = 3; msg = `Неплохо: +${wonStars} Stars!`; cls = 'win'; }
-          else { wonStars = 1; msg = `+${wonStars} Star... старайся дальше 😔`; cls = 'lose'; }
-        } else if (caseType === 'gifts') {
-          if (chance < 2) { msg = 'Rare Gift NFT! Получи подарок в профиль (симуляция) 🎁👑'; cls = 'win'; addStars(20); }
-          else if (chance < 15) { msg = 'Common Gift! 🎁 Зачёт!'; cls = 'win'; addStars(5); }
-          else { msg = 'Пусто... Нет подарка 😔'; cls = 'lose'; }
-        } else if (caseType === 'nfts') {
-          if (chance < 1) { msg = 'Legendary TON NFT! 🖼️🔥 (симуляция)'; cls = 'win'; addStars(30); }
-          else if (chance < 10) { msg = 'Rare NFT! 🖼️ Класс!'; cls = 'win'; addStars(10); }
-          else { msg = 'Shard NFT... обычный кусок 😔'; cls = 'lose'; }
+        if (type === 'stars') {
+          if (chance < 5) { wonStars = 50; msg = `Джекпот! +${wonStars} Stars!`; cls = 'win'; }
+          else if (chance < 25) { wonStars = 15; msg = `+${wonStars} Stars!`; cls = 'win'; }
+          else if (chance < 60) { wonStars = 5; msg = `+${wonStars} Stars.`; cls = 'win'; }
+          else { msg = '+1 Star... старайся дальше'; wonStars = 1; cls = 'lose'; }
+        } else if (type === 'gifts') {
+          if (chance < 3) { item = 'Rare Gift NFT 🎁👑'; msg = item; cls = 'win'; addStars(25); }
+          else if (chance < 20) { item = 'Common Gift 🎁'; msg = item; cls = 'win'; addStars(8); }
+          else { msg = 'Пусто... Нет подарка'; cls = 'lose'; }
+        } else if (type === 'nfts') {
+          if (chance < 2) { item = 'Legendary TON NFT 🖼️🔥'; msg = item; cls = 'win'; addStars(40); }
+          else if (chance < 15) { item = 'Rare NFT 🖼️'; msg = item; cls = 'win'; addStars(12); }
+          else { msg = 'Обычный NFT shard...'; cls = 'lose'; }
         }
 
+        if (item) addToInventory(item);
+
         document.getElementById('result').innerHTML = `<span class="${cls}">${msg}</span>`;
-        
         if (wonStars > 0) addStars(wonStars);
-        
-        addExp(10 + Math.floor(wonStars / 5)); // Больше EXP за хорошие выигрыши
+        addExp(10 + Math.floor(wonStars / 3));
       }, 2500);
     }
 
-    function selectCase(type) {
-      // Можно добавить проверку: если Stars < цена — не открывать (пока бесплатно)
-      openCase(type);
+    function claimDailyBonus() {
+      const now = Date.now();
+      if (now - lastDaily < 24*60*60*1000) {
+        alert("Ежедневный бонус уже взят. Приходи завтра!");
+        return;
+      }
+
+      addStars(20);
+      addExp(30);
+      lastDaily = now;
+      localStorage.setItem('gift_exp_last_daily', lastDaily);
+      alert("Ежедневный бонус: +20 Stars и +30 EXP! 🔥");
+      updateUI();
+    }
+
+    function toggleInventory() {
+      const inv = document.getElementById('inventory');
+      inv.style.display = inv.style.display === 'none' ? 'block' : 'none';
     }
   </script>
 </body>
