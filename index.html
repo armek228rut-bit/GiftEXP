@@ -3,47 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gift EXP - как Gift Go</title>
+  <title>Gift EXP</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {background:#0a0a1f; color:#e0e0ff; font-family:sans-serif; padding:0; margin:0;}
-    .top-profile {background:#1a1a3a; padding:15px; display:flex; align-items:center; border-bottom:2px solid #ffd700;}
-    .avatar {width:60px; height:60px; border-radius:50%; border:3px solid #00ffaa; margin-right:15px;}
-    .name {font-size:1.4em; font-weight:bold;}
-    .level {color:#ffd700; font-size:1.1em;}
-    .balance {font-size:1.3em; margin:10px 0;}
-    .recharge-btn {background:#00aaff; color:white; border:none; padding:12px; font-size:1.2em; border-radius:12px; width:100%; margin:10px 0;}
-    .tabs {display:flex; justify-content:space-around; background:#111; padding:10px 0;}
-    .tab-btn {background:none; border:none; color:#aaa; font-size:1.1em; padding:10px; cursor:pointer;}
-    .tab-btn.active {color:#ffd700; border-bottom:3px solid #ffd700;}
-    .content {padding:15px;}
-    .bets {display:flex; flex-wrap:wrap; justify-content:center; margin:15px 0;}
-    .bet-btn {background:#ff3366; color:white; border:none; padding:12px 20px; font-size:1.2em; border-radius:12px; margin:8px; cursor:pointer;}
+    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0;}
+    .top {background:#1a1a3a; padding:12px; display:flex; align-items:center; border-bottom:1px solid #ffd700;}
+    .avatar {width:50px; height:50px; border-radius:50%; border:3px solid #00aaff; margin-right:12px;}
+    .name {font-size:1.3em; font-weight:bold;}
+    .level {color:#ffd700; font-size:1em;}
+    .balance {text-align:center; font-size:1.4em; margin:15px 0; color:#ffd700;}
+    .recharge {background:#00aaff; color:white; border:none; padding:14px; font-size:1.3em; border-radius:12px; width:90%; margin:10px auto; display:block;}
+    .ref-card {background:#1f1f4a; margin:15px; padding:15px; border-radius:12px; text-align:center;}
+    .ref-btn {background:#00ff88; color:#000; padding:12px; border:none; border-radius:20px; font-size:1.2em; width:100%; margin-top:10px;}
+    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; position:fixed; bottom:0; left:0; right:0; border-top:1px solid #333;}
+    .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center;}
+    .tab-btn.active {color:#ffd700;}
+    .content {padding:15px; padding-bottom:80px;}
+    .bets {display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0;}
+    .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
     .bet-btn.active {background:#ffd700; color:#000;}
-    .go-btn {background:#00ff88; color:#000; padding:15px; font-size:1.5em; border:none; border-radius:12px; width:100%; margin:20px 0; font-weight:bold;}
-    #result {font-size:1.8em; margin:20px 0; text-align:center; font-weight:bold;}
-    .win {color:#00ffaa; animation:blink 1s infinite;}
+    .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold;}
+    #result {font-size:1.8em; text-align:center; margin:30px 0; min-height:60px;}
+    .win {color:#00ffaa; animation:blink 1.2s infinite;}
     .lose {color:#ff6666;}
-    .history-list {list-style:none; padding:0;}
-    .history-item {background:#1a1a3a; padding:10px; margin:8px 0; border-radius:8px;}
-    @keyframes blink {0%,100% {opacity:1;} 50% {opacity:0.6;}}
+    .gifts-grid {display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0;}
+    .gift-item {text-align:center; background:#1a1a3a; padding:8px; border-radius:10px;}
+    .gift-img {width:60px; height:60px; object-fit:contain;}
+    .chance {font-size:0.9em; color:#aaa;}
+    .history-list li {background:#1a1a3a; padding:10px; margin:8px 0; border-radius:8px;}
+    @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
   </style>
 </head>
 <body>
-  <div class="top-profile">
-    <img class="avatar" src="https://via.placeholder.com/60?text=Av" alt="Avatar">
+  <div class="top">
+    <img class="avatar" src="https://via.placeholder.com/60/00aaff/fff?text=Av" alt="Avatar">
     <div>
-      <div class="name">Твой Ник <span style="color:#ff3366;">🍅</span></div>
-      <div class="level">Ур. <span id="level">1</span></div>
+      <div class="name">Твой Ник <span>🍅</span></div>
+      <div class="level">Ур. <span id="level">2</span></div>
     </div>
   </div>
 
-  <div class="balance">Баланс: <span id="stars">50</span> ★</div>
-  <button class="recharge-btn">Пополнить баланс</button>
+  <div class="balance">Баланс: <span id="stars">92</span> ★</div>
+  <button class="recharge" onclick="alert('Пополнение через Telegram Stars (пока демо)')">Пополнить баланс</button>
 
-  <div style="background:#1a1a3a; margin:15px; padding:15px; border-radius:12px;">
+  <div class="ref-card">
     Приглашай друзей и зарабатывай 10% от их депозитов!
-    <button style="background:#00aaff; color:white; padding:12px; border:none; border-radius:12px; width:100%; margin-top:10px;">Пригласить друзей</button>
+    <button class="ref-btn" onclick="alert('Ссылка: t.me/твойбот?start=ref_12345')">Пригласить друзей</button>
   </div>
 
   <div class="tabs">
@@ -60,18 +65,38 @@
       <button class="bet-btn active" data-bet="100">100 ★</button>
       <button class="bet-btn" data-bet="250">250 ★</button>
     </div>
-    <button class="go-btn" onclick="openCase()">Мне повезёт, Go! <span id="current-bet">100</span> ★</button>
+    <button class="go-btn" onclick="spinCase()">Мне повезёт, Go! <span id="bet-display">100</span> ★</button>
     <div id="result"></div>
+
+    <div class="gifts-grid">
+      <div class="gift-item">
+        <img class="gift-img" src="https://i.imgur.com/rocket.png" alt="Rocket"> <!-- Замени на реальные -->
+        <div class="chance">1.33%</div>
+      </div>
+      <div class="gift-item">
+        <img class="gift-img" src="https://i.imgur.com/rose.png" alt="Rose">
+        <div class="chance">34.87%</div>
+      </div>
+      <div class="gift-item">
+        <img class="gift-img" src="https://i.imgur.com/teddy.png" alt="Teddy">
+        <div class="chance">10.03%</div>
+      </div>
+      <div class="gift-item">
+        <img class="gift-img" src="https://i.imgur.com/trophy.png" alt="Trophy">
+        <div class="chance">1.33%</div>
+      </div>
+      <!-- Добавь больше по желанию -->
+    </div>
   </div>
 
   <div id="gifts" class="content" style="display:none;">
     <h3>Твои подарки</h3>
-    <p>Здесь будут твои выигранные подарки (пока пусто)</p>
+    <p>Здесь будут выигранные подарки (пока пусто)</p>
   </div>
 
   <div id="friends" class="content" style="display:none;">
-    <h3>Приглашено: 0 | Заработано: 0 ★</h3>
-    <p>Приглашай друзей по ссылке выше!</p>
+    <h3>Друзья</h3>
+    <p>Приглашено: 0 | Заработано: 0 ★</p>
   </div>
 
   <div id="history" class="content" style="display:none;">
@@ -80,44 +105,18 @@
   </div>
 
   <script>
-    Telegram.WebApp.ready();
-    Telegram.WebApp.expand();
-
-    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 50;
-    let exp = parseInt(localStorage.getItem('gift_exp_exp')) || 0;
-    let level = Math.floor(exp / 100) + 1;
-    let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
-
+    let stars = 92;
     let currentBet = 100;
+    let history = [];
 
     document.querySelectorAll('.bet-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentBet = parseInt(btn.dataset.bet);
-        document.getElementById('current-bet').innerHTML = currentBet;
+        document.getElementById('bet-display').innerHTML = currentBet;
       };
     });
-
-    function updateUI() {
-      document.getElementById('stars').innerHTML = stars;
-      document.getElementById('level').innerHTML = level;
-      localStorage.setItem('gift_exp_stars', stars);
-      localStorage.setItem('gift_exp_exp', exp);
-      localStorage.setItem('gift_exp_history', JSON.stringify(history.slice(-10))); // последние 10
-    }
-
-    function addHistory(action) {
-      history.push(action);
-      const list = document.getElementById('history-list');
-      list.innerHTML = '';
-      history.slice(-5).forEach(item => {
-        const li = document.createElement('li');
-        li.className = 'history-item';
-        li.textContent = item;
-        list.appendChild(li);
-      });
-    }
 
     function showTab(tab) {
       document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
@@ -126,37 +125,35 @@
       event.target.classList.add('active');
     }
 
-    function openCase() {
-      if (stars < currentBet) {
-        alert("Недостаточно Stars!");
-        return;
-      }
-
+    function spinCase() {
+      if (stars < currentBet) return alert("Недостаточно Stars!");
       stars -= currentBet;
-      addHistory(`Открытие кейса -${currentBet} ★`);
-      document.getElementById('result').innerHTML = 'Крутится... 🎰🔥';
-      updateUI();
+      document.getElementById('result').innerHTML = 'Крутится... 🎰';
+      updateBalance();
 
       setTimeout(() => {
         const rand = Math.random() * 100;
-        let msg = '';
+        let msg = 'Обычный медведь 🧸';
         let cls = 'lose';
 
-        // Пример шансов как в скрине
-        if (rand < 0.44) { msg = 'Legendary Crystal! 🔥'; cls = 'win'; stars += 1000; }
+        if (rand < 0.44) { msg = 'Legendary Crystal! 💎'; cls = 'win'; stars += 1000; }
         else if (rand < 1.77) { msg = 'Epic Trophy! 🏆'; cls = 'win'; stars += 500; }
-        else if (rand < 3.1) { msg = 'Rare Diamond! 💎'; cls = 'win'; stars += 200; }
-        else if (rand < 13.13) { msg = 'Uncommon Rose! 🌹'; cls = 'win'; stars += 50; }
-        else { msg = 'Common Bear... 🧸'; cls = 'lose'; stars += 5; }
+        else if (rand < 3.1) { msg = 'Rare Rocket! 🚀'; cls = 'win'; stars += 200; }
+        else if (rand < 37.97) { msg = 'Uncommon Rose! 🌹'; cls = 'win'; stars += 50; }
+        else { msg = 'Common Bear 🧸'; stars += 10; }
 
         document.getElementById('result').innerHTML = `<span class="${cls}">${msg}</span>`;
-        addHistory(`${msg} +${stars - (stars - currentBet)} ★`); // упрощённо
-        updateUI();
-      }, 2500);
+        history.push(`${msg} (${cls === 'win' ? '+' : '-'} ${Math.abs(stars - (stars - currentBet))})`);
+        updateBalance();
+      }, 2000);
     }
 
-    updateUI();
-    showTab('play'); // старт на игре
+    function updateBalance() {
+      document.getElementById('stars').innerHTML = stars;
+    }
+
+    updateBalance();
+    showTab('play');
   </script>
 </body>
 </html>
