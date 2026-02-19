@@ -139,62 +139,80 @@
       });
     }
 
-    function openCase() {
-      if (stars < currentBet) return alert("Недостаточно Stars!");
+    <script>
+// ... (всё, что было выше, не трогаем: баланс, user, ставки, showTab, addHistory и т.д.)
 
-      stars -= currentBet;
-      addHistory(`Открытие кейса -${currentBet} ★`);
-      document.getElementById('result').innerHTML = '';
-      document.getElementById('stars').innerHTML = stars;
+let isSpinning = false; // новый флаг
 
-      // Определяем выигрыш заранее
-      const rand = Math.random() * 100;
-      let prize = 'Common Bear 🧸';
-      let cls = 'lose';
-      let multiplier = currentBet >= 100 ? 1.5 : 1; // улучшение шансов на высоких ставках
+function openCase() {
+  if (isSpinning) {
+    alert("Подожди, пока закончится текущая прокрутка!");
+    return;
+  }
 
-      if (rand < 0.44 * multiplier) { prize = 'Legendary Crystal 💎'; cls = 'win'; }
-      else if (rand < 1.77 * multiplier) { prize = 'Epic Trophy 🏆'; cls = 'win'; }
-      else if (rand < 3.1 * multiplier) { prize = 'Rare Rocket 🚀'; cls = 'win'; }
-      else if (rand < 37.97 * multiplier) { prize = 'Uncommon Rose 🌹'; cls = 'win'; }
-      else if (rand < 48 * multiplier) { prize = 'Ring 💍'; cls = 'win'; }
+  if (stars < currentBet) {
+    alert("Недостаточно Stars!");
+    return;
+  }
 
-      // Создаём ленту из 40 случайных призов, последний - выигранный
-      const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
-      const reel = document.getElementById('reel');
-      reel.innerHTML = '';
-      for (let i = 0; i < 35; i++) {
-        const div = document.createElement('div');
-        div.className = 'prize';
-        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
-        reel.appendChild(div);
-      }
-      // Последний - выигранный
-      const finalDiv = document.createElement('div');
-      finalDiv.className = 'prize';
-      finalDiv.innerHTML = prize.split(' ')[1] || prize; // эмодзи
-      reel.appendChild(finalDiv);
+  isSpinning = true; // блокируем
+  document.querySelector('.go-btn').disabled = true; // кнопка серая
+  document.querySelector('.go-btn').style.opacity = '0.5';
 
-      // Прокрутка: сдвигаем влево на (35 * 120px + центр)
-      const offset = - (35 * 120 + 60); // до центра последнего
-      reel.style.transition = 'left 4.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
-      reel.style.left = offset + 'px';
+  stars -= currentBet;
+  addHistory(`Открытие кейса -${currentBet} ★`);
+  document.getElementById('result').innerHTML = '';
+  document.getElementById('stars').innerHTML = stars;
 
-      document.getElementById('spin-sound').play();
+  // Определяем выигрыш заранее
+  const rand = Math.random() * 100;
+  let prize = 'Common Bear 🧸';
+  let cls = 'lose';
+  let multiplier = currentBet >= 100 ? 1.5 : 1;
 
-      setTimeout(() => {
-        document.getElementById('result').innerHTML = `<span class="${cls}">${prize}</span>`;
-        if (cls === 'win') {
-          confetti({particleCount: 120, spread: 90});
-          document.getElementById('win-sound').play();
-        }
-        stars += Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3)); // +80% или +30% в среднем
-        document.getElementById('stars').innerHTML = stars;
-        addHistory(`${prize} +${Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3))} ★`);
-      }, 4800);
+  if (rand < 0.44 * multiplier) { prize = 'Legendary Crystal 💎'; cls = 'win'; }
+  else if (rand < 1.77 * multiplier) { prize = 'Epic Trophy 🏆'; cls = 'win'; }
+  else if (rand < 3.1 * multiplier) { prize = 'Rare Rocket 🚀'; cls = 'win'; }
+  else if (rand < 37.97 * multiplier) { prize = 'Uncommon Rose 🌹'; cls = 'win'; }
+  else if (rand < 48 * multiplier) { prize = 'Ring 💍'; cls = 'win'; }
+
+  // Лента
+  const prizes = ['🧸', '🌹', '🚀', '🏆', '💎', '💍'];
+  const reel = document.getElementById('reel');
+  reel.innerHTML = '';
+  for (let i = 0; i < 35; i++) {
+    const div = document.createElement('div');
+    div.className = 'prize';
+    div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+    reel.appendChild(div);
+  }
+  const finalDiv = document.createElement('div');
+  finalDiv.className = 'prize';
+  finalDiv.innerHTML = prize.split(' ')[1] || prize;
+  reel.appendChild(finalDiv);
+
+  const offset = - (35 * 120 + 60);
+  reel.style.transition = 'left 4.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+  reel.style.left = offset + 'px';
+
+  document.getElementById('spin-sound').play();
+
+  setTimeout(() => {
+    document.getElementById('result').innerHTML = `<span class="${cls}">${prize}</span>`;
+    if (cls === 'win') {
+      confetti({particleCount: 120, spread: 90});
+      document.getElementById('win-sound').play();
     }
+    stars += Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3));
+    document.getElementById('stars').innerHTML = stars;
+    addHistory(`${prize} +${Math.floor(currentBet * (cls === 'win' ? 1.8 : 1.3))} ★`);
 
-    showTab('play');
-  </script>
-</body>
-</html>
+    // Разблокируем
+    isSpinning = false;
+    document.querySelector('.go-btn').disabled = false;
+    document.querySelector('.go-btn').style.opacity = '1';
+  }, 4800);
+}
+
+// ... (остальные функции: updateBalance если была, showTab и т.д.)
+</script>
