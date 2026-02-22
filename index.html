@@ -109,7 +109,7 @@
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
 
-    const BOT_TOKEN = '8285488838:AAGIp9QgTNoxzZPTtZlsXWzoPXUxmrm4gVU'; // ← ВСТАВЬ СВОЙ ТОКЕН ОТ BOTFATHER
+    const BOT_TOKEN = '8285488838:AAGIp9QgTNoxzZPTtZlsXWzoPXUxmrm4gVU'; // ← ТВОЙ ТОКЕН
 
     let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 92;
     let currentBet = 25;
@@ -174,6 +174,7 @@
       document.getElementById(tab).style.display = 'block';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
+      if (tab === 'gifts') updateInventory();
     }
 
     function addHistory(entry) {
@@ -186,6 +187,47 @@
         li.textContent = item;
         list.appendChild(li);
       });
+    }
+
+    function updateInventory() {
+      const list = document.getElementById('inventory-list');
+      list.innerHTML = '';
+      if (inventory.length === 0) {
+        list.innerHTML = '<p>У тебя пока нет подарков</p>';
+        return;
+      }
+      inventory.forEach((gift, index) => {
+        const item = document.createElement('li');
+        item.className = 'inventory-item';
+        item.innerHTML = `
+          <div class="inv-emoji">${gift.emoji}</div>
+          <div class="inv-info">
+            <strong>${gift.name}</strong><br>
+            Продажа: ${gift.price} ★
+          </div>
+          <div>
+            <button class="sell-btn" onclick="sellGift(${index})">Продать</button>
+            <button class="withdraw-btn" onclick="withdrawGift(${index})">Вывести</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function sellGift(index) {
+      const gift = inventory[index];
+      stars += gift.price;
+      document.getElementById('stars').innerHTML = stars;
+      localStorage.setItem('gift_exp_stars', stars);
+      inventory.splice(index, 1);
+      localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
+      updateInventory();
+      addHistory(`Продан ${gift.name} +${gift.price} ★`);
+      alert(`Продан ${gift.name} за ${gift.price} ★`);
+    }
+
+    function withdrawGift(index) {
+      alert("Вывод подарков скоро будет доступен (имитация)");
     }
 
     function openCase() {
@@ -210,6 +252,7 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
+      // Выбор подарка
       const rand = Math.random() * 100;
       let cumChance = 0;
       let selectedGift = gifts[9];
@@ -221,10 +264,16 @@
         }
       }
 
+      // Добавляем в инвентарь и сохраняем
       inventory.push(selectedGift);
       localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
 
-      // Сброс ленты
+      // Обновляем инвентарь сразу (если вкладка открыта)
+      if (document.getElementById('gifts').style.display !== 'none') {
+        updateInventory();
+      }
+
+      // Сброс и запуск ленты
       const reel = document.getElementById('reel');
       reel.style.transition = 'none';
       reel.style.left = '0px';
@@ -270,7 +319,7 @@
       }, 2700);
     }
 
-    // Функция реального пополнения через Telegram Stars
+    // Пополнение через Telegram Stars (исправлено умножение!)
     async function rechargeStars() {
       const amount = prompt("Сколько Stars пополнить? (например 100, 500, 1000)", "100");
       if (!amount || isNaN(amount) || parseInt(amount) <= 0) {
@@ -287,10 +336,10 @@
           body: JSON.stringify({
             title: `Пополнение баланса на ${num} Stars`,
             description: `Получи ${num} ★ в Gift EXP. Спасибо за поддержку! 🎁`,
-            payload: `deposit_${user.id}_${Date.now()}`, // уникальный ID платежа
-            provider_token: "", // для Stars — пусто
-            currency: "XTR", // Telegram Stars
-            prices: [{ label: "Пополнение", amount: num * 100 }], // сумма в копейках (1 Star = 100)
+            payload: `deposit_${user.id}_${Date.now()}`,
+            provider_token: "",
+            currency: "XTR",
+            prices: [{ label: "Пополнение", amount: num }], // УБРАНО *100 — теперь правильно!
             need_name: false,
             need_phone_number: false,
             need_email: false,
@@ -326,7 +375,6 @@
       }
     }
 
-    // Привязываем кнопку
     document.querySelector('.recharge').onclick = rechargeStars;
 
     updateChances();
