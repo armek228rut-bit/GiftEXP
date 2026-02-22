@@ -6,58 +6,116 @@
   <title>Gift EXP</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; padding:20px; margin:0;}
-    h1 {color:#ffd700; margin:10px;}
-    .stats {font-size:18px; margin:15px 0;}
-    button {background:#e91e63; color:white; border:none; padding:15px 30px; font-size:20px; border-radius:12px; margin:10px; cursor:pointer;}
-    #result {font-size:26px; margin:30px 0; min-height:100px;}
-    .win {color:#00ff9d; animation:blink 1.5s infinite;}
-    .lose {color:#ff5252;}
-    #exp-bar {margin:20px auto; background:#333; border:2px solid #ffd700; border-radius:10px; height:25px; width:80%; max-width:400px;}
-    #exp-progress {background:linear-gradient(to right, #ffd700, #ffaa00); height:100%; width:0%; border-radius:8px; transition:width 0.5s;}
-    @keyframes blink {0%,100% {opacity:1;} 50% {opacity:0.7;}}
-    .gifts-grid {display:grid; grid-template-columns:repeat(auto-fit, minmax(100px, 1fr)); gap:10px; margin:20px 0;}
-    .gift-item {text-align:center; background:#1a1a3a; padding:10px; border-radius:12px;}
-    .gift-emoji {font-size:40px;}
-    .chance {font-size:14px; color:#00ff9d;}
-    .price {font-size:14px; color:#ffd700;}
+    body {background:#0d0d1f; color:#d0d0ff; font-family:sans-serif; margin:0; padding:0; min-height:100vh;}
+    .top {background:#1a1a3a; padding:12px; display:flex; align-items:center; border-bottom:1px solid #333;}
+    .avatar {width:50px; height:50px; border-radius:50%; border:2px solid #00aaff; margin-right:12px;}
+    .name {font-size:1.3em; font-weight:bold;}
+    .level {color:#00aaff; font-size:1em;}
+    .balance {text-align:center; font-size:1.4em; margin:15px 0; color:#00aaff;}
+    .recharge {background:#00aaff; color:white; border:none; padding:14px; font-size:1.3em; border-radius:12px; width:90%; margin:10px auto; display:block;}
+    .ref-card {background:linear-gradient(#00aaff, #0077cc); margin:15px; padding:15px; border-radius:12px; text-align:center; color:white;}
+    .ref-btn {background:#ffffff20; color:white; padding:12px; border:none; border-radius:20px; font-size:1.2em; width:100%; margin-top:10px;}
+    .tabs {display:flex; justify-content:space-around; background:#111; padding:8px 0; position:fixed; bottom:0; left:0; right:0; border-top:1px solid #333; z-index:1000;}
+    .tab-btn {background:none; border:none; color:#aaa; font-size:1em; padding:8px; flex:1; text-align:center; cursor:pointer;}
+    .tab-btn.active {color:#ffffff; border-bottom:3px solid #ffd700;}
+    .content {padding:15px; padding-bottom:90px;}
     .bets {display:flex; justify-content:center; gap:20px; margin:20px 0;}
+    .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
+    .bet-btn.active {background:#ffd700; color:#000;}
+    .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold;}
+    .go-btn:disabled {background:#555; opacity:0.6;}
+    #reel-container {overflow:hidden; height:160px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
+    #reel {display:flex; position:absolute; left:0; transition:left 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
+    .prize {width:160px; height:160px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:6em; background:#1a1a3a; border:1px solid #444;}
+    .center-line {position:absolute; top:0; bottom:0; left:50%; width:6px; background:#ffd700; transform:translateX(-50%); pointer-events:none; box-shadow:0 0 30px #ffd700, 0 0 60px #ffaa00; z-index:5;}
+    #result {font-size:2em; text-align:center; margin:20px 0; font-weight:bold; min-height:60px;}
+    .win {color:#00ffaa; animation:blink 1.2s infinite;}
+    .lose {color:#ff6666;}
+    .chances-row {display:flex; overflow-x:auto; gap:15px; padding:10px 0; white-space:nowrap; scrollbar-width:thin;}
+    .chance-item {min-width:100px; text-align:center; background:#1a1a3a; padding:10px; border-radius:12px;}
+    .chance-emoji {font-size:40px;}
+    .chance-pct {font-size:14px; color:#00ff9d;}
+    .chance-price {font-size:14px; color:#ffd700;}
+    @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
   </style>
 </head>
 <body>
-  <h1>Gift EXP</h1>
-  
-  <div class="stats">
-    Баланс Stars: <span id="stars">0</span> ⭐<br>
-    EXP: <span id="exp">0</span> | Уровень: <span id="level">1</span>
-  </div>
-  
-  <div id="exp-bar"><div id="exp-progress"></div></div>
-  
-  <p>Выбери ставку и крути!</p>
-  
-  <div class="bets">
-    <button class="bet-btn active" data-bet="25">25 ⭐</button>
-    <button class="bet-btn" data-bet="50">50 ⭐</button>
+  <div class="top">
+    <img class="avatar" id="user-avatar" src="https://via.placeholder.com/50?text=Av" alt="Avatar">
+    <div>
+      <div class="name" id="user-name">Твой Ник 🍅</div>
+      <div class="level">Ур. <span id="level">2</span></div>
+    </div>
   </div>
 
-  <button class="go-btn" onclick="openCase()">Мне повезёт, Go! 25 ⭐</button>
+  <div class="balance">Баланс: <span id="stars">92</span> ★</div>
+  <button class="recharge" onclick="alert('Пополнение через Telegram Stars')">Пополнить баланс</button>
 
-  <div id="reel-container">
-    <div id="reel"></div>
-    <div class="center-line"></div>
+  <div class="ref-card">
+    Приглашай друзей и зарабатывай 10% от их депозитов!
+    <button class="ref-btn" onclick="alert('Ссылка: t.me/твойбот?start=ref_12345')">Пригласить друзей</button>
   </div>
 
-  <div id="result"></div>
-
-  <div class="gifts-grid">
-    <!-- Шансы обновляются JS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('play')">Играть</button>
+    <button class="tab-btn" onclick="showTab('gifts')">Подарки</button>
+    <button class="tab-btn" onclick="showTab('friends')">Друзья</button>
+    <button class="tab-btn" onclick="showTab('history')">История</button>
   </div>
+
+  <div id="play" class="content">
+    <div class="bets">
+      <button class="bet-btn active" data-bet="25">25 ★</button>
+      <button class="bet-btn" data-bet="50">50 ★</button>
+    </div>
+    <button class="go-btn" onclick="openCase()">Мне повезёт, Go! <span id="bet-display">25</span> ★</button>
+
+    <div id="reel-container">
+      <div id="reel"></div>
+      <div class="center-line"></div>
+    </div>
+
+    <div id="result"></div>
+
+    <div class="chances-row" id="chances-row">
+      <!-- Шансы будут добавлены JS -->
+    </div>
+  </div>
+
+  <div id="gifts" class="content" style="display:none;">
+    <h3>Твои подарки</h3>
+    <p>Здесь будут выигранные подарки</p>
+  </div>
+
+  <div id="friends" class="content" style="display:none;">
+    <h3>Друзья</h3>
+    <p>Приглашено: 0 | Заработано: 0 ★</p>
+  </div>
+
+  <div id="history" class="content" style="display:none;">
+    <h3>История</h3>
+    <ul id="history-list" class="history-list"></ul>
+  </div>
+
+  <audio id="spin-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-arcade-retro-game-over-213.wav"></audio>
+  <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.wav"></audio>
 
   <script>
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
 
+    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 92;
+    let currentBet = 25;
+    let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
+    let isSpinning = false;
+
+    const user = Telegram.WebApp.initDataUnsafe.user;
+    if (user) {
+      document.getElementById('user-name').innerHTML = (user.username || user.first_name) + ' 🍅';
+      if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
+    }
+
+    // Подарки (эмодзи + цена)
     const gifts = [
       {name: 'Diamond', emoji: '💎', price: 100},
       {name: 'Trophy', emoji: '🏆', price: 100},
@@ -72,84 +130,84 @@
       {name: 'Heart', emoji: '💝', price: 15}
     ];
 
-    // Шансы для ставки 25 и 50 (RTP ~95%)
+    // Шансы (RTP ~95%, ты в +5%)
     const chances = {
       25: {diamond: 0.1, trophy: 0.1, ring: 0.1, rocket: 2, champagne: 2, bouquet: 2, cake: 2, rose: 18, gift: 18, teddy: 27.35, heart: 27.35},
       50: {diamond: 0.2, trophy: 0.2, ring: 0.2, rocket: 4, champagne: 4, bouquet: 4, cake: 4, rose: 16, gift: 16, teddy: 25.6, heart: 25.6}
     };
 
-    let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 0;
-    let exp = parseInt(localStorage.getItem('gift_exp_exp')) || 0;
-    let level = Math.floor(exp / 100) + 1;
-    let currentBet = 25;
-
     document.getElementById('stars').innerHTML = stars;
-    document.getElementById('exp').innerHTML = exp;
-    document.getElementById('level').innerHTML = level;
-    updateProgress();
-    updateChances();
 
-    function updateProgress() {
-      let progress = (exp % 100);
-      document.getElementById('exp-progress').style.width = progress + '%';
-    }
-
-    function updateChances() {
-      const grid = document.querySelector('.gifts-grid');
-      grid.innerHTML = '';
-      gifts.forEach(g => {
-        const item = document.createElement('div');
-        item.className = 'gift-item';
-        item.innerHTML = `
-          <div class="gift-emoji">${g.emoji}</div>
-          <div class="chance">${chances[currentBet][g.name.toLowerCase()] || 0}%</div>
-          <div class="price">${g.price} ⭐</div>
-        `;
-        grid.appendChild(item);
-      });
-    }
-
+    // Обновление шансов и текста Go! при смене ставки
     document.querySelectorAll('.bet-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentBet = parseInt(btn.dataset.bet);
-        document.querySelector('.go-btn').textContent = `Мне повезёт, Go! ${currentBet} ⭐`;
+        document.querySelector('.go-btn').textContent = `Мне повезёт, Go! ${currentBet} ★`;
         updateChances();
-      };
+      });
     });
 
-    function addExp(amount) {
-      exp += amount;
-      localStorage.setItem('gift_exp_exp', exp);
-      document.getElementById('exp').innerHTML = exp;
-      
-      let newLevel = Math.floor(exp / 100) + 1;
-      if (newLevel > level) {
-        level = newLevel;
-        document.getElementById('level').innerHTML = level;
-        let bonusStars = 5 + level * 2;
-        stars += bonusStars;
-        localStorage.setItem('gift_exp_stars', stars);
-        document.getElementById('stars').innerHTML = stars;
-        alert(`Новый уровень ${level}! Бонус: +${bonusStars} Stars! 🎉`);
-      }
-      updateProgress();
+    function updateChances() {
+      const row = document.getElementById('chances-row');
+      row.innerHTML = '';
+      gifts.forEach(g => {
+        const item = document.createElement('div');
+        item.className = 'chance-item';
+        item.innerHTML = `
+          <div class="chance-emoji">${g.emoji}</div>
+          <div class="chance-pct">${chances[currentBet][g.name.toLowerCase()] || 0}%</div>
+          <div class="chance-price">${g.price} ★</div>
+        `;
+        row.appendChild(item);
+      });
+    }
+
+    function showTab(tab) {
+      document.querySelectorAll('.content').forEach(c => c.style.display = 'none');
+      document.getElementById(tab).style.display = 'block';
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function addHistory(entry) {
+      history.push(entry);
+      localStorage.setItem('gift_exp_history', JSON.stringify(history));
+      const list = document.getElementById('history-list');
+      list.innerHTML = '';
+      history.slice(-5).forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = item;
+        list.appendChild(li);
+      });
     }
 
     function openCase() {
+      if (isSpinning) {
+        alert("Подожди окончания прокрутки!");
+        return;
+      }
+
       if (stars < currentBet) {
         alert("Недостаточно Stars!");
         return;
       }
 
+      isSpinning = true;
+      const goBtn = document.querySelector('.go-btn');
+      goBtn.disabled = true;
+      goBtn.style.opacity = '0.5';
+      goBtn.textContent = "Крутится...";
+
       stars -= currentBet;
-      localStorage.setItem('gift_exp_stars', stars);
+      addHistory(`Открытие кейса -${currentBet} ★`);
+      document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
       const rand = Math.random() * 100;
       let cumChance = 0;
-      let selectedGift = gifts[10]; // default
+      let selectedGift = gifts[9]; // default teddy
       for (let g of gifts) {
         cumChance += chances[currentBet][g.name.toLowerCase()] || 0;
         if (rand < cumChance) {
@@ -159,16 +217,19 @@
       }
 
       stars += selectedGift.price;
-      localStorage.setItem('gift_exp_stars', stars);
       document.getElementById('stars').innerHTML = stars;
 
-      addExp(10);
+      document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★</span>`;
 
-      document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ⭐</span>`;
+      isSpinning = false;
+      goBtn.disabled = false;
+      goBtn.style.opacity = '1';
+      goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
     }
 
     // Инициализация
     updateChances();
+    showTab('play');
   </script>
 </body>
 </html>
