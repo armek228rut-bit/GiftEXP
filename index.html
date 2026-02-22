@@ -43,7 +43,7 @@
   <div class="top">
     <img class="avatar" id="user-avatar" src="https://via.placeholder.com/50?text=Av" alt="Avatar">
     <div>
-      <div class="name" id="user-name">Твой Ник </div>
+      <div class="name" id="user-name">Твой Ник 🍅</div>
       <div class="level">Ур. <span id="level">2</span></div>
     </div>
   </div>
@@ -113,7 +113,6 @@
       if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
     }
 
-    // Подарки и шансы
     const gifts = [
       {name: 'Diamond', emoji: '💎', price: 100},
       {name: 'Trophy', emoji: '🏆', price: 100},
@@ -135,7 +134,6 @@
 
     document.getElementById('stars').innerHTML = stars;
 
-    // Обновление ставки и текста Go!
     document.querySelectorAll('.bet-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
@@ -204,7 +202,7 @@
 
       const rand = Math.random() * 100;
       let cumChance = 0;
-      let selectedGift = gifts[9]; // default teddy
+      let selectedGift = gifts[9]; // teddy
       for (let g of gifts) {
         cumChance += chances[currentBet][g.name.toLowerCase()] || 0;
         if (rand < cumChance) {
