@@ -25,7 +25,7 @@
     .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold; transition:opacity 0.3s;}
     .go-btn:disabled {background:#555; opacity:0.6;}
     #reel-container {overflow:hidden; height:160px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
-    #reel {display:flex; position:absolute; left:0; transition:left 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
+    #reel {display:flex; position:absolute; left:0; transition:left 2.5s cubic-bezier(0.25, 0.1, 0.25, 1);}
     .prize {width:160px; height:160px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:6em; background:#1a1a3a; border:1px solid #444;}
     .center-line {position:absolute; top:0; bottom:0; left:50%; width:6px; background:#ffd700; transform:translateX(-50%); pointer-events:none; box-shadow:0 0 30px #ffd700, 0 0 60px #ffaa00; z-index:5;}
     #result {font-size:2em; text-align:center; margin:20px 0; font-weight:bold; min-height:60px;}
@@ -128,8 +128,8 @@
     ];
 
     const chances = {
-      25: {diamond: 0.1, trophy: 0.1, ring: 0.1, rocket: 2, champagne: 2, bouquet: 2, cake: 2, rose: 18, gift: 18, teddy: 27.35, heart: 27.35},
-      50: {diamond: 0.2, trophy: 0.2, ring: 0.2, rocket: 4, champagne: 4, bouquet: 4, cake: 4, rose: 16, gift: 16, teddy: 25.6, heart: 25.6}
+      25: {diamond: 0.5, trophy: 0.5, ring: 0.5, rocket: 3, champagne: 3, bouquet: 3, cake: 3, rose: 20, gift: 20, teddy: 24.5, heart: 24.5},
+      50: {diamond: 1, trophy: 1, ring: 1, rocket: 5, champagne: 5, bouquet: 5, cake: 5, rose: 18, gift: 18, teddy: 23, heart: 23}
     };
 
     document.getElementById('stars').innerHTML = stars;
@@ -152,7 +152,7 @@
         item.className = 'chance-item';
         item.innerHTML = `
           <div class="chance-emoji">${g.emoji}</div>
-          <div class="chance-pct">${chances[currentBet][g.name.toLowerCase()] || 0}%</div>
+          <div class="chance-pct">${chances[currentBet][g.name.toLowerCase()] || 0.1}%</div>
           <div class="chance-price">${g.price} ★</div>
         `;
         row.appendChild(item);
@@ -200,6 +200,18 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
+      // Определяем выигрыш заранее
+      const rand = Math.random() * 100;
+      let cumChance = 0;
+      let selectedGift = gifts[9]; // teddy по умолчанию
+      for (let g of gifts) {
+        cumChance += chances[currentBet][g.name.toLowerCase()] || 0.1;
+        if (rand < cumChance) {
+          selectedGift = g;
+          break;
+        }
+      }
+
       // Сброс ленты перед новой анимацией
       const reel = document.getElementById('reel');
       reel.style.transition = 'none';
@@ -209,14 +221,13 @@
       reel.innerHTML = '';
 
       // Строим длинную ленту с эмодзи
-      const prizes = gifts.map(g => g.emoji);
+      const prizeEmojis = gifts.map(g => g.emoji);
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
-        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        div.innerHTML = prizeEmojis[Math.floor(Math.random() * prizeEmojis.length)];
         reel.appendChild(div);
       }
-      // Выигранный приз в конце
       const finalDiv = document.createElement('div');
       finalDiv.className = 'prize';
       finalDiv.innerHTML = selectedGift.emoji;
@@ -224,20 +235,8 @@
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
         div.className = 'prize';
-        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        div.innerHTML = prizeEmojis[Math.floor(Math.random() * prizeEmojis.length)];
         reel.appendChild(div);
-      }
-
-      // Выбор выигрыша заранее
-      const rand = Math.random() * 100;
-      let cumChance = 0;
-      let selectedGift = gifts[9]; // teddy
-      for (let g of gifts) {
-        cumChance += chances[currentBet][g.name.toLowerCase()] || 0;
-        if (rand < cumChance) {
-          selectedGift = g;
-          break;
-        }
       }
 
       // Точный offset для центра
@@ -247,8 +246,7 @@
       const totalLeftWidth = 80 * prizeWidth;
       const offset = - (totalLeftWidth - centerOffset);
 
-      // Запуск прокрутки
-      reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+      reel.style.transition = 'left 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
 
       document.getElementById('spin-sound').play();
@@ -262,7 +260,7 @@
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
-      }, 5200);
+      }, 2700); // 2.5 секунды + запас
     }
 
     updateChances();
