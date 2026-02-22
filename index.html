@@ -23,7 +23,7 @@
     .bets {display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin:20px 0;}
     .bet-btn {background:#ff3366; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; cursor:pointer;}
     .bet-btn.active {background:#ffd700; color:#000;}
-    .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold;}
+    .go-btn {background:#00ff88; color:#000; padding:16px; font-size:1.6em; border:none; border-radius:20px; width:90%; margin:20px auto; display:block; font-weight:bold; transition:opacity 0.3s;}
     .go-btn:disabled {background:#555; opacity:0.6;}
     #reel-container {overflow:hidden; height:160px; margin:30px 0; position:relative; background:#111; border-radius:12px; border:2px solid #333;}
     #reel {display:flex; position:absolute; left:0; transition:left 5s cubic-bezier(0.25, 0.1, 0.25, 1);}
@@ -109,17 +109,18 @@
       if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
     }
 
-    // Обновление текста кнопки Go! при каждом выборе ставки
+    // Обновление ставки и текста кнопки Go! каждый раз при клике
     document.querySelectorAll('.bet-btn').forEach(btn => {
-      btn.onclick = () => {
+      btn.addEventListener('click', () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentBet = parseInt(btn.dataset.bet);
         document.getElementById('bet-display').innerHTML = currentBet;
-        // Обновляем текст кнопки Go! сразу
+
+        // Обязательно обновляем текст кнопки Go!
         const goBtn = document.querySelector('.go-btn');
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
-      };
+      });
     });
 
     function showTab(tab) {
@@ -225,7 +226,6 @@
         isSpinning = false;
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
-        // После окончания всегда обновляем текст по текущей ставке
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
       }, 5200);
     }
