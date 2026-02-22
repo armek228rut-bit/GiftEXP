@@ -200,6 +200,35 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
+      // Сброс ленты перед новой анимацией
+      const reel = document.getElementById('reel');
+      reel.style.transition = 'none';
+      reel.style.left = '0px';
+      reel.offsetHeight; // force reflow
+
+      reel.innerHTML = '';
+
+      // Строим длинную ленту с эмодзи
+      const prizes = gifts.map(g => g.emoji);
+      for (let i = 0; i < 80; i++) {
+        const div = document.createElement('div');
+        div.className = 'prize';
+        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        reel.appendChild(div);
+      }
+      // Выигранный приз в конце
+      const finalDiv = document.createElement('div');
+      finalDiv.className = 'prize';
+      finalDiv.innerHTML = selectedGift.emoji;
+      reel.appendChild(finalDiv);
+      for (let i = 0; i < 80; i++) {
+        const div = document.createElement('div');
+        div.className = 'prize';
+        div.innerHTML = prizes[Math.floor(Math.random() * prizes.length)];
+        reel.appendChild(div);
+      }
+
+      // Выбор выигрыша заранее
       const rand = Math.random() * 100;
       let cumChance = 0;
       let selectedGift = gifts[9]; // teddy
@@ -211,18 +240,29 @@
         }
       }
 
-      stars += selectedGift.price;
-      document.getElementById('stars').innerHTML = stars;
+      // Точный offset для центра
+      const prizeWidth = 160;
+      const containerWidth = document.getElementById('reel-container').offsetWidth;
+      const centerOffset = (containerWidth - prizeWidth) / 2;
+      const totalLeftWidth = 80 * prizeWidth;
+      const offset = - (totalLeftWidth - centerOffset);
 
-      document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★</span>`;
+      // Запуск прокрутки
+      reel.style.transition = 'left 5s cubic-bezier(0.25, 0.1, 0.25, 1)';
+      reel.style.left = offset + 'px';
 
-      // Имитация прокрутки (5 секунд)
+      document.getElementById('spin-sound').play();
+
       setTimeout(() => {
+        document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★</span>`;
+        stars += selectedGift.price;
+        document.getElementById('stars').innerHTML = stars;
+
         isSpinning = false;
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
-      }, 5000);
+      }, 5200);
     }
 
     updateChances();
