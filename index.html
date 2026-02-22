@@ -216,13 +216,15 @@
 
       document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★</span>`;
 
-      isSpinning = false;
-      goBtn.disabled = false;
-      goBtn.style.opacity = '1';
-      goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
+      // Имитация прокрутки (5 секунд)
+      setTimeout(() => {
+        isSpinning = false;
+        goBtn.disabled = false;
+        goBtn.style.opacity = '1';
+        goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
+      }, 5000);
     }
 
-    // Инициализация
     updateChances();
     showTab('play');
   </script>
