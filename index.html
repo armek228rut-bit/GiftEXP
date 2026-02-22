@@ -43,6 +43,16 @@
     .inv-buttons button {margin-left:10px; padding:8px 16px; border-radius:8px; cursor:pointer;}
     .sell-btn {background:#ff3366; color:white; border:none;}
     .withdraw-btn {background:#00aaff; color:white; border:none;}
+    .exp-section {text-align:center; padding:20px;}
+    .exp-bar {background:#333; border:2px solid #ffd700; border-radius:10px; height:20px; margin:10px auto; width:80%; max-width:400px;}
+    .exp-progress {background:linear-gradient(to right, #ffd700, #ffaa00); height:100%; width:0%; border-radius:8px; transition:width 0.5s;}
+    .season-title {font-size:1.8em; color:#ffd700; margin:10px 0;}
+    .premium-btn {background:#00aaff; color:white; border:none; padding:12px 24px; font-size:1.2em; border-radius:12px; margin:15px auto; display:block; width:fit-content;}
+    .reward-grid {display:grid; grid-template-columns:repeat(2, 1fr); gap:15px; margin:20px 0;}
+    .reward-card {background:#1a1a3a; padding:15px; border-radius:12px; text-align:center;}
+    .reward-premium {border:2px solid #ffd700; background:#2a2a4a;}
+    .reward-btn {background:#ff3366; color:white; border:none; padding:8px 16px; border-radius:8px; margin-top:10px; cursor:pointer;}
+    .reward-btn:disabled {background:#555; cursor:not-allowed;}
     @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
   </style>
 </head>
@@ -64,8 +74,9 @@
   </div>
 
   <div class="tabs">
-    <button class="tab-btn active" onclick="showTab('play')">Играть</button>
+    <button class="tab-btn" onclick="showTab('play')">Играть</button>
     <button class="tab-btn" onclick="showTab('gifts')">Подарки</button>
+    <button class="tab-btn active" onclick="showTab('exp')">EXP</button>
     <button class="tab-btn" onclick="showTab('friends')">Друзья</button>
     <button class="tab-btn" onclick="showTab('history')">История</button>
   </div>
@@ -92,6 +103,54 @@
     <ul id="inventory-list" class="inventory-list"></ul>
   </div>
 
+  <div id="exp" class="content" style="display:none;">
+    <div class="exp-section">
+      <div class="season-title">Spring Season</div>
+      <button class="premium-btn" onclick="alert('Покупка Premium за 99 ★ — скоро будет доступна')">Купить Premium — 99 ★</button>
+
+      <div>Твой XP: <span id="current-xp">0</span></div>
+      <div class="exp-bar">
+        <div id="exp-progress" class="exp-progress"></div>
+      </div>
+
+      <div class="reward-grid">
+        <!-- Бесплатные награды -->
+        <div class="reward-card">
+          <div>5 Stars</div>
+          <div>100 XP</div>
+          <button class="reward-btn" onclick="claimFreeReward(0)">Забрать</button>
+        </div>
+        <div class="reward-card">
+          <div>Bear</div>
+          <div>200 XP</div>
+          <button class="reward-btn" onclick="claimFreeReward(1)">Забрать</button>
+        </div>
+        <div class="reward-card">
+          <div>15 Stars</div>
+          <div>300 XP</div>
+          <button class="reward-btn" onclick="claimFreeReward(2)">Забрать</button>
+        </div>
+        <div class="reward-card">
+          <div>Bear Upgrade</div>
+          <div>400 XP</div>
+          <button class="reward-btn" onclick="claimFreeReward(3)">Забрать</button>
+        </div>
+
+        <!-- Премиум-награды -->
+        <div class="reward-card reward-premium">
+          <div>Bear</div>
+          <div>100 XP</div>
+          <button class="reward-btn" onclick="claimPremiumReward(0)">Забрать</button>
+        </div>
+        <div class="reward-card reward-premium">
+          <div>Heart</div>
+          <div>200 XP</div>
+          <button class="reward-btn" onclick="claimPremiumReward(1)">Забрать</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="friends" class="content" style="display:none;">
     <h3>Друзья</h3>
     <p>Приглашено: 0 | Заработано: 0 ★</p>
@@ -113,6 +172,7 @@
     let currentBet = 25;
     let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
     let inventory = JSON.parse(localStorage.getItem('gift_exp_inventory')) || [];
+    let xp = parseInt(localStorage.getItem('gift_exp_xp')) || 0;
     let isSpinning = false;
 
     const user = Telegram.WebApp.initDataUnsafe.user;
@@ -141,6 +201,13 @@
     };
 
     document.getElementById('stars').innerHTML = stars;
+    document.getElementById('current-xp').innerHTML = xp;
+    updateExpProgress();
+
+    function updateExpProgress() {
+      const progress = (xp % 100) / 100 * 100;
+      document.getElementById('exp-progress').style.width = progress + '%';
+    }
 
     document.querySelectorAll('.bet-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -225,8 +292,15 @@
     }
 
     function withdrawGift(index) {
-      const gift = inventory[index];
-      alert(`Вывод ${gift.name} скоро будет доступен (имитация)`);
+      alert("Вывод подарков скоро будет доступен (имитация)");
+    }
+
+    function claimFreeReward(index) {
+      alert("Бесплатная награда за XP — скоро будет реализовано");
+    }
+
+    function claimPremiumReward(index) {
+      alert("Премиум-награда — покупка Premium за 99 ★ скоро будет доступна");
     }
 
     function openCase() {
@@ -251,6 +325,7 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
+      // Определяем выигрыш
       const rand = Math.random() * 100;
       let cumChance = 0;
       let selectedGift = gifts[9];
@@ -262,7 +337,7 @@
         }
       }
 
-      // Добавляем подарок в инвентарь
+      // Добавляем в инвентарь
       inventory.push(selectedGift);
       localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
 
