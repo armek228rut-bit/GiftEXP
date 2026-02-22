@@ -203,7 +203,7 @@
       // Определяем выигрыш заранее
       const rand = Math.random() * 100;
       let cumChance = 0;
-      let selectedGift = gifts[9]; // teddy по умолчанию
+      let selectedGift = gifts[9]; // teddy
       for (let g of gifts) {
         cumChance += chances[currentBet][g.name.toLowerCase()] || 0.1;
         if (rand < cumChance) {
@@ -212,7 +212,7 @@
         }
       }
 
-      // Сброс ленты перед новой анимацией
+      // Сброс ленты
       const reel = document.getElementById('reel');
       reel.style.transition = 'none';
       reel.style.left = '0px';
@@ -220,7 +220,7 @@
 
       reel.innerHTML = '';
 
-      // Строим длинную ленту с эмодзи
+      // Лента: 80 случайных + выигранный + 80 случайных
       const prizeEmojis = gifts.map(g => g.emoji);
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
@@ -239,12 +239,12 @@
         reel.appendChild(div);
       }
 
-      // Точный offset для центра
+      // Точный offset: центр приза ровно под линией
       const prizeWidth = 160;
       const containerWidth = document.getElementById('reel-container').offsetWidth;
       const centerOffset = (containerWidth - prizeWidth) / 2;
       const totalLeftWidth = 80 * prizeWidth;
-      const offset = - (totalLeftWidth - centerOffset);
+      const offset = - (totalLeftWidth - centerOffset + prizeWidth / 2); // + prizeWidth / 2 — центр приза
 
       reel.style.transition = 'left 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
