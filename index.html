@@ -36,6 +36,13 @@
     .chance-emoji {font-size:40px;}
     .chance-pct {font-size:14px; color:#00ff9d;}
     .chance-price {font-size:14px; color:#ffd700;}
+    .inventory-list {list-style:none; padding:0;}
+    .inventory-item {background:#1a1a3a; margin:10px 0; padding:15px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;}
+    .inv-emoji {font-size:40px; margin-right:15px;}
+    .inv-info {flex:1;}
+    .inv-buttons button {margin-left:10px; padding:8px 16px; border-radius:8px; cursor:pointer;}
+    .sell-btn {background:#ff3366; color:white; border:none;}
+    .withdraw-btn {background:#00aaff; color:white; border:none;}
     @keyframes blink {0%,100%{opacity:1;} 50%{opacity:0.7;}}
   </style>
 </head>
@@ -81,8 +88,8 @@
   </div>
 
   <div id="gifts" class="content" style="display:none;">
-    <h3>Твои подарки</h3>
-    <p>Здесь будут выигранные подарки</p>
+    <h3>Твой инвентарь</h3>
+    <ul id="inventory-list" class="inventory-list"></ul>
   </div>
 
   <div id="friends" class="content" style="display:none;">
@@ -105,6 +112,7 @@
     let stars = parseInt(localStorage.getItem('gift_exp_stars')) || 92;
     let currentBet = 25;
     let history = JSON.parse(localStorage.getItem('gift_exp_history')) || [];
+    let inventory = JSON.parse(localStorage.getItem('gift_exp_inventory')) || [];
     let isSpinning = false;
 
     const user = Telegram.WebApp.initDataUnsafe.user;
@@ -164,6 +172,7 @@
       document.getElementById(tab).style.display = 'block';
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       event.target.classList.add('active');
+      if (tab === 'gifts') updateInventory();
     }
 
     function addHistory(entry) {
@@ -176,6 +185,48 @@
         li.textContent = item;
         list.appendChild(li);
       });
+    }
+
+    function updateInventory() {
+      const list = document.getElementById('inventory-list');
+      list.innerHTML = '';
+      if (inventory.length === 0) {
+        list.innerHTML = '<p>У тебя пока нет подарков</p>';
+        return;
+      }
+      inventory.forEach((gift, index) => {
+        const item = document.createElement('li');
+        item.className = 'inventory-item';
+        item.innerHTML = `
+          <div class="inv-emoji">${gift.emoji}</div>
+          <div class="inv-info">
+            <strong>${gift.name}</strong><br>
+            Продажа: ${gift.price} ★
+          </div>
+          <div>
+            <button class="sell-btn" onclick="sellGift(${index})">Продать</button>
+            <button class="withdraw-btn" onclick="withdrawGift(${index})">Вывести</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function sellGift(index) {
+      const gift = inventory[index];
+      stars += gift.price;
+      document.getElementById('stars').innerHTML = stars;
+      localStorage.setItem('gift_exp_stars', stars);
+      inventory.splice(index, 1);
+      localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
+      updateInventory();
+      addHistory(`Продан ${gift.name} +${gift.price} ★`);
+      alert(`Продан ${gift.name} за ${gift.price} ★`);
+    }
+
+    function withdrawGift(index) {
+      const gift = inventory[index];
+      alert(`Вывод ${gift.name} скоро будет доступен (имитация)`);
     }
 
     function openCase() {
@@ -200,10 +251,9 @@
       document.getElementById('result').innerHTML = '';
       document.getElementById('stars').innerHTML = stars;
 
-      // Определяем выигрыш заранее
       const rand = Math.random() * 100;
       let cumChance = 0;
-      let selectedGift = gifts[9]; // teddy
+      let selectedGift = gifts[9];
       for (let g of gifts) {
         cumChance += chances[currentBet][g.name.toLowerCase()] || 0.1;
         if (rand < cumChance) {
@@ -212,15 +262,18 @@
         }
       }
 
+      // Добавляем подарок в инвентарь
+      inventory.push(selectedGift);
+      localStorage.setItem('gift_exp_inventory', JSON.stringify(inventory));
+
       // Сброс ленты
       const reel = document.getElementById('reel');
       reel.style.transition = 'none';
       reel.style.left = '0px';
-      reel.offsetHeight; // force reflow
+      reel.offsetHeight;
 
       reel.innerHTML = '';
 
-      // Лента: 80 случайных + выигранный + 80 случайных
       const prizeEmojis = gifts.map(g => g.emoji);
       for (let i = 0; i < 80; i++) {
         const div = document.createElement('div');
@@ -239,12 +292,11 @@
         reel.appendChild(div);
       }
 
-      // Точный offset: центр приза ровно под линией
       const prizeWidth = 160;
       const containerWidth = document.getElementById('reel-container').offsetWidth;
       const centerOffset = (containerWidth - prizeWidth) / 2;
       const totalLeftWidth = 80 * prizeWidth;
-      const offset = - (totalLeftWidth - centerOffset + prizeWidth / 2); // + prizeWidth / 2 — центр приза
+      const offset = - (totalLeftWidth - centerOffset + prizeWidth / 2);
 
       reel.style.transition = 'left 2.5s cubic-bezier(0.25, 0.1, 0.25, 1)';
       reel.style.left = offset + 'px';
@@ -252,15 +304,12 @@
       document.getElementById('spin-sound').play();
 
       setTimeout(() => {
-        document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★</span>`;
-        stars += selectedGift.price;
-        document.getElementById('stars').innerHTML = stars;
-
+        document.getElementById('result').innerHTML = `<span class="win">${selectedGift.emoji} ${selectedGift.name} +${selectedGift.price} ★ (в инвентаре)</span>`;
         isSpinning = false;
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
-      }, 2700); // 2.5 секунды + запас
+      }, 2700);
     }
 
     updateChances();
