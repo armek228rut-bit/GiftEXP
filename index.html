@@ -109,15 +109,16 @@
       if (user.photo_url) document.getElementById('user-avatar').src = user.photo_url;
     }
 
-    // Обновление текста кнопки Go! при смене ставки — это фикс твоей проблемы
+    // Обновление текста кнопки Go! при каждом выборе ставки
     document.querySelectorAll('.bet-btn').forEach(btn => {
       btn.onclick = () => {
         document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentBet = parseInt(btn.dataset.bet);
         document.getElementById('bet-display').innerHTML = currentBet;
-        // Главное обновление текста кнопки
-        document.querySelector('.go-btn').textContent = `Мне повезёт, Go! ${currentBet} ★`;
+        // Обновляем текст кнопки Go! сразу
+        const goBtn = document.querySelector('.go-btn');
+        goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
       };
     });
 
@@ -224,6 +225,7 @@
         isSpinning = false;
         goBtn.disabled = false;
         goBtn.style.opacity = '1';
+        // После окончания всегда обновляем текст по текущей ставке
         goBtn.textContent = `Мне повезёт, Go! ${currentBet} ★`;
       }, 5200);
     }
